@@ -1,0 +1,17 @@
+/* components/Editor.module.css */
+
+.editorWrap {
+  flex: 1;
+  overflow: hidden;
+  /* Monaco needs an explicit height to render correctly */
+  height: 100%;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+  font-size: 13px;
+}

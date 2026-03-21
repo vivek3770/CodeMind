@@ -1,0 +1,38 @@
+/* components/StatusBar.module.css */
+
+.bar {
+  height: 22px;
+  background: #1f6feb;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 14px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+.right {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+}
+
+.item {
+  opacity: 0.85;
+}
