@@ -1,20 +1,8 @@
-/**
- * components/FileExplorer.jsx
- * Sidebar showing all open files. Highlights active file,
- * shows issue-count badge after a review, and exposes Add / Close actions.
- */
 import React, { useState } from 'react'
 import { getIconForFilename } from '../utils/fileUtils'
 import styles from './FileExplorer.module.css'
 
-export default function FileExplorer({
-  files,
-  activeFile,
-  onOpenFile,
-  onAddFile,
-  onCloseFile,
-  issueCounts = {},   // { filename: number }
-}) {
+export default function FileExplorer({ files, activeFile, onOpenFile, onAddFile, onCloseFile, issueCounts = {}, style }) {
   const [showModal, setShowModal] = useState(false)
   const [newName, setNewName]     = useState('')
 
@@ -27,57 +15,39 @@ export default function FileExplorer({
   }
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={styles.sidebar} style={style}>
       <div className={styles.header}>Explorer</div>
 
       <div className={styles.tree}>
         <div className={styles.treeRoot}>▾ src/</div>
-
-        {Object.keys(files).map((fname) => {
+        {Object.keys(files).map(fname => {
           const count = issueCounts[fname] ?? 0
           return (
-            <div
-              key={fname}
+            <div key={fname}
               className={`${styles.fileItem} ${fname === activeFile ? styles.active : ''}`}
-              onClick={() => onOpenFile(fname)}
-              title={fname}
-            >
+              onClick={() => onOpenFile(fname)}>
               <span className={styles.icon}>{getIconForFilename(fname)}</span>
               <span className={styles.name}>{fname}</span>
-              {count > 0 && (
-                <span className={styles.badge}>{count}</span>
-              )}
-              <button
-                className={styles.closeBtn}
-                onClick={(e) => { e.stopPropagation(); onCloseFile(fname) }}
-                title={`Close ${fname}`}
-              >
-                ×
-              </button>
+              {count > 0 && <span className={styles.badge}>{count}</span>}
+              <button className={styles.closeBtn}
+                onClick={e => { e.stopPropagation(); onCloseFile(fname) }}>×</button>
             </div>
           )
         })}
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.addBtn} onClick={() => setShowModal(true)}>
-          + New File
-        </button>
+        <button className={styles.addBtn} onClick={() => setShowModal(true)}>+ New File</button>
       </div>
 
-      {/* New-file modal */}
       {showModal && (
         <div className={styles.modalBackdrop} onClick={() => setShowModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalTitle}>New File</div>
-            <input
-              className={styles.modalInput}
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-              placeholder="filename.py"
-              autoFocus
-            />
+            <input className={styles.modalInput} value={newName}
+              onChange={e => setNewName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              placeholder="filename.py" autoFocus />
             <div className={styles.modalActions}>
               <button className="btn" onClick={() => setShowModal(false)}>Cancel</button>
               <button className="btn btn-primary" onClick={handleAdd}>Create</button>

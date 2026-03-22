@@ -1,18 +1,15 @@
-/* components/TabBar.module.css */
+/* TabBar.module.css */
 
 .tabBar {
-  height: 36px;
-  background: var(--bg1);
-  border-bottom: 1px solid var(--border);
+  height: 38px;
+  background: var(--surface0);
+  border-bottom: 1px solid var(--border1);
   display: flex;
   align-items: flex-end;
   overflow-x: auto;
   flex-shrink: 0;
 }
-
-.tabBar::-webkit-scrollbar {
-  height: 3px;
-}
+.tabBar::-webkit-scrollbar { height: 2px; }
 
 .tab {
   display: flex;
@@ -22,60 +19,44 @@
   height: 100%;
   font-size: 12px;
   font-family: var(--font-mono);
+  font-weight: 500;
   cursor: pointer;
-  border-top: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-left: 1px solid transparent;
   border-right: 1px solid transparent;
-  color: var(--text2);
+  color: var(--tx2);
   white-space: nowrap;
   flex-shrink: 0;
-  transition: color 0.1s, background 0.1s;
+  transition: all 0.15s;
   user-select: none;
+  letter-spacing: 0.02em;
 }
-
-.tab:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
-}
+.tab:hover { color: var(--tx1); background: rgba(255,255,255,0.03); }
 
 .tab.active {
-  background: var(--bg0);
-  color: var(--text);
-  border-color: var(--border) var(--border) transparent;
+  background: var(--void);
+  color: var(--tx0);
+  border-top-color: var(--cyan);
+  border-left-color: var(--border1);
+  border-right-color: var(--border1);
+  box-shadow: inset 0 1px 0 rgba(0,212,255,0.1);
 }
 
-.icon {
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.name {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.icon { font-size: 12px; flex-shrink: 0; }
+.name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
 
 .closeBtn {
   background: none;
   border: none;
-  color: var(--text3);
+  color: var(--tx3);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
-  padding: 0 2px;
-  border-radius: 2px;
+  padding: 1px 3px;
+  border-radius: 3px;
   opacity: 0;
-  transition: opacity 0.1s, color 0.1s, background 0.1s;
+  transition: all 0.15s;
   flex-shrink: 0;
 }
-
-.tab:hover .closeBtn,
-.tab.active .closeBtn {
-  opacity: 0.6;
-}
-
-.closeBtn:hover {
-  opacity: 1 !important;
-  color: var(--text);
-  background: var(--bg3);
-}
+.tab:hover .closeBtn, .tab.active .closeBtn { opacity: 0.5; }
+.closeBtn:hover { opacity: 1 !important; color: var(--red); background: var(--red-glow); }

@@ -1,28 +1,26 @@
-/**
- * components/StatusBar.jsx
- * Bottom status bar showing AI status, language, line/col, encoding.
- */
 import React from 'react'
 import styles from './StatusBar.module.css'
 
 export default function StatusBar({ status, language, lines, chars, cursor }) {
   return (
     <div className={styles.bar}>
-      <span className={styles.left}>
-        <span className={styles.dot} />
+      <div className={styles.statusChip}>
+        <div className={styles.dot} />
         <span>{status || 'Ready'}</span>
-      </span>
+      </div>
 
-      <span className={styles.item}>{language}</span>
+      <div className={styles.langChip}>
+        {language?.toUpperCase() || 'PYTHON'}
+      </div>
 
-      <span className={styles.right}>
-        <span className={styles.item}>Lines: {lines}</span>
-        <span className={styles.item}>Chars: {chars}</span>
-        <span className={styles.item}>
-          Ln {cursor.line}, Col {cursor.col}
-        </span>
-        <span className={styles.item}>UTF-8</span>
-      </span>
+      <div className={styles.right}>
+        <div className={styles.item}>⌥ Ln {cursor.line}</div>
+        <div className={styles.item}>Col {cursor.col}</div>
+        <div className={styles.item}>{lines} lines</div>
+        <div className={styles.item}>{chars} chars</div>
+        <div className={styles.item}>UTF-8</div>
+        <div className={styles.item}>CRLF</div>
+      </div>
     </div>
   )
 }

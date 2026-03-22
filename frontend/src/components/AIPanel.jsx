@@ -1,13 +1,3 @@
-/**
- * components/AIPanel.jsx
- * The right-side panel that houses:
- *   - Loading spinner while AI is working
- *   - Error state
- *   - Empty state (no review yet)
- *   - Review results: ScoreCard + four IssueSections
- *   - OutputPanel for explain / fix / tests
- *   - Footer actions (Clear, Copy Report)
- */
 import React from 'react'
 import ScoreCard    from './ScoreCard'
 import IssueSection from './IssueSection'
@@ -21,59 +11,51 @@ const SECTIONS = [
   { key: 'readability', icon: '📖', title: 'Readability', category: 'readability' },
 ]
 
-export default function AIPanel({
-  visible,
-  loading,
-  loadingAction,
-  reviewResult,
-  outputResult,
-  error,
-  onJumpToLine,
-  onClearReview,
-  onCopyReport,
-  onApplyFix,
-  onAddTestFile,
-  onClose,
+const LOADING_LABELS = {
+  review:  'Reviewing your code',
+  explain: 'Analysing code logic',
+  fix:     'Fixing all issues',
+  tests:   'Writing unit tests',
+}
+
+export default function AIPanel({ style,
+  visible, loading, loadingAction,
+  reviewResult, outputResult, error,
+  onJumpToLine, onClearReview, onCopyReport,
+  onApplyFix, onAddTestFile, onClose,
 }) {
   if (!visible) return null
 
   const totalIssues = reviewResult
-    ? (reviewResult.bugs?.length ?? 0)
-    + (reviewResult.security?.length ?? 0)
+    ? (reviewResult.bugs?.length        ?? 0)
+    + (reviewResult.security?.length    ?? 0)
     + (reviewResult.performance?.length ?? 0)
     + (reviewResult.readability?.length ?? 0)
     : 0
 
-  const loadingLabels = {
-    review:  'Reviewing your code…',
-    explain: 'Analysing code logic…',
-    fix:     'Fixing issues…',
-    tests:   'Writing unit tests…',
-  }
-
   return (
-    <aside className={styles.panel}>
+    <aside className={styles.panel} style={style}>
       {/* Header */}
       <div className={styles.header}>
         <span className={styles.headerIcon}>🤖</span>
         <span className={styles.headerTitle}>AI Review</span>
         {totalIssues > 0 && (
-          <span className={styles.badge}>
-            {totalIssues} issue{totalIssues !== 1 ? 's' : ''}
-          </span>
+          <span className={styles.badge}>{totalIssues} ISSUES</span>
         )}
         <button className={styles.closeBtn} onClick={onClose} title="Close panel">×</button>
       </div>
 
-      {/* Body */}
+      {/* Scrollable body */}
       <div className={styles.body}>
 
         {/* Loading */}
         {loading && (
           <div className={styles.loading}>
-            <div className={styles.loadingSpinner} />
-            <div className={styles.loadingText}>{loadingLabels[loadingAction] ?? 'Working…'}</div>
-            <div className={styles.loadingHint}>Powered by Claude AI</div>
+            <div className={styles.loadingRing} />
+            <div className={styles.loadingText}>
+              {LOADING_LABELS[loadingAction] ?? 'Working'}<span className={styles.dots} />
+            </div>
+            <div className={styles.loadingHint}>Powered by Gemini AI</div>
           </div>
         )}
 
@@ -88,11 +70,11 @@ export default function AIPanel({
         {/* Empty state */}
         {!loading && !error && !reviewResult && !outputResult && (
           <div className={styles.empty}>
-            <div className={styles.emptyIcon}>🔍</div>
-            <div className={styles.emptyTitle}>No review yet</div>
+            <div className={styles.emptyOrb}>🔍</div>
+            <div className={styles.emptyTitle}>No Review Yet</div>
             <div className={styles.emptySub}>
-              Click <strong>Review Code</strong> to get AI-powered analysis —
-              bug detection, performance tips, security scan, and a quality score.
+              Click <strong>Review Code</strong> for AI-powered bug detection,
+              security scanning, performance tips, and a quality score.
             </div>
           </div>
         )}
@@ -118,7 +100,7 @@ export default function AIPanel({
           </>
         )}
 
-        {/* Explain / Fix / Tests output */}
+        {/* Output panel */}
         {!loading && !error && outputResult && (
           <OutputPanel
             output={outputResult}

@@ -5,6 +5,32 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  background: var(--void);
+  position: relative;
+}
+
+/* Ambient background glow */
+.app::before {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: -10%;
+  width: 50%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(0,100,200,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.app::after {
+  content: '';
+  position: fixed;
+  bottom: -10%;
+  right: -5%;
+  width: 40%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(100,0,200,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .main {
@@ -12,12 +38,50 @@
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .editorCol {
-  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
+  flex: 1;
+}
+
+/* ── Resize Handle ────────────────────────────────────────── */
+.resizeHandle {
+  width: 4px;
+  background: var(--border0);
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 40px;
+  background: var(--border2);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.resizeHandle:hover,
+.resizeHandle.dragging {
+  background: var(--cyan-glow);
+}
+
+.resizeHandle:hover::after,
+.resizeHandle.dragging::after {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  height: 60px;
 }

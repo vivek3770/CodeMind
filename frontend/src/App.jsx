@@ -1,22 +1,13 @@
 /**
- * App.jsx — Root component.
- * Wires together all hooks and components into the full IDE layout.
- *
- * Layout:
- *   TopBar
- *   ┌──────────┬──────────────────────┬──────────┐
- *   │ File     │  Editor              │ AI       │
- *   │ Explorer │  (Monaco)            │ Panel    │
- *   └──────────┴──────────────────────┴──────────┘
- *   StatusBar
+ * App.jsx — Root component with resizable sidebar + AI panel
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import TopBar      from './components/TopBar'
+import TopBar       from './components/TopBar'
 import FileExplorer from './components/FileExplorer'
-import TabBar      from './components/TabBar'
-import Editor      from './components/Editor'
-import AIPanel     from './components/AIPanel'
-import StatusBar   from './components/StatusBar'
+import TabBar       from './components/TabBar'
+import Editor       from './components/Editor'
+import AIPanel      from './components/AIPanel'
+import StatusBar    from './components/StatusBar'
 import { useEditor } from './hooks/useEditor'
 import { useAI }     from './hooks/useAI'
 import { applyMarkers, clearMarkers } from './utils/markerUtils'
@@ -24,7 +15,7 @@ import './styles/globals.css'
 import styles from './App.module.css'
 
 export default function App() {
-  // ── Editor state ──────────────────────────────────────────────
+  // ── Editor + AI hooks ────────────────────────────────────────
   const {
     files, activeFile,
     editorRef, monacoRef,
@@ -35,7 +26,6 @@ export default function App() {
     jumpToLine,
   } = useEditor()
 
-  // ── AI state ──────────────────────────────────────────────────
   const {
     loading, loadingAction,
     reviewResult, outputResult, error,
@@ -43,66 +33,102 @@ export default function App() {
     clearReview,
   } = useAI()
 
-  // ── UI state ──────────────────────────────────────────────────
+  // ── Panel sizes (px) ─────────────────────────────────────────
+  const [sidebarW,  setSidebarW]  = useState(200)
+  const [aiPanelW,  setAiPanelW]  = useState(340)
   const [panelVisible, setPanelVisible] = useState(true)
-  const [toast, setToast]               = useState(null)
-  const [cursor, setCursor]             = useState({ line: 1, col: 1 })
-  const [lineCount, setLineCount]       = useState(0)
-  const [charCount, setCharCount]       = useState(0)
+
+  // ── UI state ─────────────────────────────────────────────────
+  const [toast,    setToast]    = useState(null)
+  const [cursor,   setCursor]   = useState({ line: 1, col: 1 })
+  const [lineCount, setLineCount] = useState(0)
+  const [charCount, setCharCount] = useState(0)
   const toastTimer = useRef(null)
 
-  // ── Toast helper ──────────────────────────────────────────────
-  const showToast = useCallback((msg) => {
+  // ── Resize logic ─────────────────────────────────────────────
+  const dragging     = useRef(null)   // 'sidebar' | 'aipanel'
+  const dragStart    = useRef(null)
+  const sizeStart    = useRef(null)
+  const [isDragging, setIsDragging] = useState(null)
+
+  const onMouseDownSidebar = useCallback(e => {
+    e.preventDefault()
+    dragging.current  = 'sidebar'
+    dragStart.current = e.clientX
+    sizeStart.current = sidebarW
+    setIsDragging('sidebar')
+  }, [sidebarW])
+
+  const onMouseDownAI = useCallback(e => {
+    e.preventDefault()
+    dragging.current  = 'aipanel'
+    dragStart.current = e.clientX
+    sizeStart.current = aiPanelW
+    setIsDragging('aipanel')
+  }, [aiPanelW])
+
+  useEffect(() => {
+    const onMove = e => {
+      if (!dragging.current) return
+      const delta = e.clientX - dragStart.current
+      if (dragging.current === 'sidebar') {
+        setSidebarW(Math.max(160, Math.min(400, sizeStart.current + delta)))
+      } else {
+        setAiPanelW(Math.max(280, Math.min(600, sizeStart.current - delta)))
+      }
+    }
+    const onUp = () => {
+      dragging.current = null
+      setIsDragging(null)
+      if (editorRef.current) editorRef.current.layout()
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [editorRef])
+
+  // ── Toast ────────────────────────────────────────────────────
+  const showToast = useCallback(msg => {
     setToast(msg)
     clearTimeout(toastTimer.current)
     toastTimer.current = setTimeout(() => setToast(null), 2800)
   }, [])
 
-  // ── Apply Monaco markers when review result arrives ───────────
+  // ── Apply markers ────────────────────────────────────────────
   useEffect(() => {
     const editor = editorRef.current
     const monaco = monacoRef.current
     if (!editor || !monaco) return
-
-    if (!reviewResult) {
-      clearMarkers(monaco, editor.getModel())
-      return
-    }
-
+    if (!reviewResult) { clearMarkers(monaco, editor.getModel()); return }
     const allIssues = [
-      ...(reviewResult.bugs        ?? []).map((i) => ({ ...i, category: 'Bug' })),
-      ...(reviewResult.performance ?? []).map((i) => ({ ...i, category: 'Performance' })),
-      ...(reviewResult.security    ?? []).map((i) => ({ ...i, category: 'Security' })),
-      ...(reviewResult.readability ?? []).map((i) => ({ ...i, category: 'Readability' })),
+      ...(reviewResult.bugs        ?? []).map(i => ({ ...i, category: 'Bug'         })),
+      ...(reviewResult.performance ?? []).map(i => ({ ...i, category: 'Performance' })),
+      ...(reviewResult.security    ?? []).map(i => ({ ...i, category: 'Security'    })),
+      ...(reviewResult.readability ?? []).map(i => ({ ...i, category: 'Readability' })),
     ]
     applyMarkers(monaco, editor.getModel(), allIssues)
   }, [reviewResult, editorRef, monacoRef])
 
-  // ── Build issue-count map for FileExplorer badges ─────────────
+  // ── Issue counts for sidebar badges ─────────────────────────
   const issueCounts = {}
   if (reviewResult) {
-    const total =
-      (reviewResult.bugs?.length        ?? 0) +
-      (reviewResult.security?.length    ?? 0) +
-      (reviewResult.performance?.length ?? 0) +
-      (reviewResult.readability?.length ?? 0)
+    const total = (reviewResult.bugs?.length ?? 0)
+      + (reviewResult.security?.length    ?? 0)
+      + (reviewResult.performance?.length ?? 0)
+      + (reviewResult.readability?.length ?? 0)
     if (total > 0) issueCounts[activeFile] = total
   }
 
-  // ── Action handlers ───────────────────────────────────────────
-  const handleReview = () =>
-    reviewCode(getCurrentCode(), files[activeFile]?.language ?? 'python', activeFile)
+  // ── Handlers ─────────────────────────────────────────────────
+  const handleReview  = () => reviewCode(getCurrentCode(), files[activeFile]?.language ?? 'python', activeFile)
+  const handleExplain = () => explainCode(getCurrentCode(), files[activeFile]?.language ?? 'python')
+  const handleFix     = () => fixCode(getCurrentCode(), files[activeFile]?.language ?? 'python')
+  const handleTests   = () => generateTests(getCurrentCode(), files[activeFile]?.language ?? 'python', activeFile)
 
-  const handleExplain = () =>
-    explainCode(getCurrentCode(), files[activeFile]?.language ?? 'python')
-
-  const handleFix = () =>
-    fixCode(getCurrentCode(), files[activeFile]?.language ?? 'python')
-
-  const handleTests = () =>
-    generateTests(getCurrentCode(), files[activeFile]?.language ?? 'python', activeFile)
-
-  const handleApplyFix = useCallback((fixedCode) => {
+  const handleApplyFix = useCallback(fixedCode => {
     if (editorRef.current) {
       editorRef.current.setValue(fixedCode)
       showToast('✓ Fixed code applied to editor')
@@ -111,39 +137,35 @@ export default function App() {
 
   const handleAddTestFile = useCallback((code, filename) => {
     addFile(filename)
-    // Give React a tick to create the file before setting content
-    setTimeout(() => {
-      if (editorRef.current) editorRef.current.setValue(code)
-    }, 100)
+    setTimeout(() => { if (editorRef.current) editorRef.current.setValue(code) }, 100)
     showToast(`✓ ${filename} added to project`)
   }, [addFile, editorRef, showToast])
 
   const handleCopyReport = useCallback(() => {
     if (!reviewResult) { showToast('No review to copy'); return }
     const r = reviewResult
-    const lines = [
-      `Code Review — Score: ${r.score}/10`,
-      `Summary: ${r.summary}`, '',
-      `BUGS (${r.bugs?.length ?? 0}):`,
-      ...(r.bugs ?? []).map((b) => `  Line ${b.line}: ${b.message}`), '',
-      `SECURITY (${r.security?.length ?? 0}):`,
-      ...(r.security ?? []).map((b) => `  Line ${b.line}: ${b.message}`), '',
-      `PERFORMANCE (${r.performance?.length ?? 0}):`,
-      ...(r.performance ?? []).map((b) => `  Line ${b.line}: ${b.message}`), '',
-      `READABILITY (${r.readability?.length ?? 0}):`,
-      ...(r.readability ?? []).map((b) => `  Line ${b.line}: ${b.message}`),
+    const txt = [
+      `Code Review — Score: ${r.score}/10`, `Summary: ${r.summary}`, '',
+      `BUGS (${r.bugs?.length ?? 0}):`, ...(r.bugs ?? []).map(b => `  Line ${b.line}: ${b.message}`), '',
+      `SECURITY (${r.security?.length ?? 0}):`, ...(r.security ?? []).map(b => `  Line ${b.line}: ${b.message}`), '',
+      `PERFORMANCE (${r.performance?.length ?? 0}):`, ...(r.performance ?? []).map(b => `  Line ${b.line}: ${b.message}`), '',
+      `READABILITY (${r.readability?.length ?? 0}):`, ...(r.readability ?? []).map(b => `  Line ${b.line}: ${b.message}`),
     ]
-    navigator.clipboard.writeText(lines.join('\n'))
+    navigator.clipboard.writeText(txt.join('\n'))
       .then(() => showToast('✓ Report copied to clipboard'))
       .catch(() => showToast('Copy failed'))
   }, [reviewResult, showToast])
 
-  const handleCloseFile = useCallback((fname) => {
+  const handleCloseFile = useCallback(fname => {
     if (Object.keys(files).length === 1) { showToast('Cannot close last file'); return }
     closeFile(fname)
   }, [files, closeFile, showToast])
 
-  // ── Render ────────────────────────────────────────────────────
+  // ── Status text ──────────────────────────────────────────────
+  const statusText = loading
+    ? `${loadingAction ? loadingAction.charAt(0).toUpperCase() + loadingAction.slice(1) : 'AI'} in progress…`
+    : reviewResult ? `Review complete · Score: ${reviewResult.score}/10` : 'Ready'
+
   return (
     <div className={styles.app}>
       <TopBar
@@ -153,12 +175,13 @@ export default function App() {
         onExplain={handleExplain}
         onFix={handleFix}
         onTests={handleTests}
-        onTogglePanel={() => setPanelVisible((v) => !v)}
+        onTogglePanel={() => setPanelVisible(v => !v)}
         loading={loading}
         loadingAction={loadingAction}
       />
 
       <div className={styles.main}>
+        {/* Sidebar */}
         <FileExplorer
           files={files}
           activeFile={activeFile}
@@ -166,8 +189,17 @@ export default function App() {
           onAddFile={addFile}
           onCloseFile={handleCloseFile}
           issueCounts={issueCounts}
+          style={{ width: sidebarW, minWidth: sidebarW, maxWidth: sidebarW }}
         />
 
+        {/* Sidebar resize handle */}
+        <div
+          className={`${styles.resizeHandle} ${isDragging === 'sidebar' ? styles.dragging : ''}`}
+          onMouseDown={onMouseDownSidebar}
+          title="Drag to resize"
+        />
+
+        {/* Editor column */}
         <div className={styles.editorCol}>
           <TabBar
             files={files}
@@ -187,6 +219,16 @@ export default function App() {
           />
         </div>
 
+        {/* AI panel resize handle */}
+        {panelVisible && (
+          <div
+            className={`${styles.resizeHandle} ${isDragging === 'aipanel' ? styles.dragging : ''}`}
+            onMouseDown={onMouseDownAI}
+            title="Drag to resize"
+          />
+        )}
+
+        {/* AI Panel */}
         <AIPanel
           visible={panelVisible}
           loading={loading}
@@ -200,11 +242,12 @@ export default function App() {
           onApplyFix={handleApplyFix}
           onAddTestFile={handleAddTestFile}
           onClose={() => setPanelVisible(false)}
+          style={panelVisible ? { width: aiPanelW, minWidth: aiPanelW, maxWidth: aiPanelW } : {}}
         />
       </div>
 
       <StatusBar
-        status={loading ? `AI ${loadingAction}ing…` : reviewResult ? `Review complete · Score: ${reviewResult.score}/10` : 'Ready'}
+        status={statusText}
         language={files[activeFile]?.language ?? ''}
         lines={lineCount}
         chars={charCount}

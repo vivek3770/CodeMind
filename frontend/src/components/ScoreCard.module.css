@@ -1,22 +1,36 @@
-/* components/ScoreCard.module.css */
+/* ScoreCard.module.css */
 
 .card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
+  background: linear-gradient(135deg, var(--surface2), var(--surface1));
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 16px;
   display: flex;
-  gap: 14px;
+  gap: 16px;
   align-items: center;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent);
+  opacity: 0.6;
 }
 
 .ring {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   flex-shrink: 0;
 }
+
+.ring svg { transform: rotate(-90deg); filter: drop-shadow(0 0 6px currentColor); }
 
 .ringVal {
   position: absolute;
@@ -24,60 +38,76 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
 }
 
-.info {
-  flex: 1;
-  min-width: 0;
-}
+.info { flex: 1; min-width: 0; }
 
 .title {
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--text);
-  margin-bottom: 3px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--tx0);
+  margin-bottom: 2px;
+  letter-spacing: 0.02em;
 }
 
 .summary {
   font-size: 11px;
-  color: var(--text3);
-  margin-bottom: 6px;
-  line-height: 1.4;
+  color: var(--tx2);
+  margin-bottom: 10px;
+  line-height: 1.5;
 }
 
 .barRow {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-top: 5px;
 }
 
 .barLabel {
   font-size: 10px;
-  color: var(--text2);
-  width: 44px;
+  font-family: var(--font-mono);
+  color: var(--tx2);
+  width: 46px;
   flex-shrink: 0;
+  letter-spacing: 0.03em;
 }
 
 .barTrack {
   flex: 1;
-  height: 3px;
-  background: var(--bg3);
+  height: 4px;
+  background: var(--surface3);
   border-radius: 2px;
   overflow: hidden;
+  position: relative;
 }
 
 .barFill {
   height: 100%;
   border-radius: 2px;
-  transition: width 0.8s ease;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.barFill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 2px;
+  filter: blur(1px);
 }
 
 .barVal {
   font-size: 10px;
-  color: var(--text2);
+  font-family: var(--font-mono);
+  color: var(--tx2);
   width: 28px;
   text-align: right;
   flex-shrink: 0;
