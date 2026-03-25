@@ -16,12 +16,10 @@
 - **Auto Fix** — AI rewrites your code with all issues fixed
 - **Explain Code** — Natural language explanation of what your code does
 - **Generate Tests** — Automatic unit test generation (pytest, Jest, JUnit)
-
-# Coming Soon
 - **Algorithm Visualizer** — 14 algorithms animated step by step
 - **Resizable Panels** — Drag to resize sidebar, editor, and AI panel
 
-## 🧠 Algorithm Visualizer (Coming Soon)
+## 🧠 Algorithm Visualizer
 
 | Category | Algorithms |
 |---|---|
