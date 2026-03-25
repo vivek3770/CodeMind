@@ -209,3 +209,17 @@ body {
 
 /* ── Resize handle cursor ───────────────────────────────────── */
 .resize-col { cursor: col-resize; }
+
+/* ── Code Visualizer — Monaco line highlight ─────────────────── */
+.viz-line-highlight {
+  background: rgba(0, 255, 157, 0.08) !important;
+  border-left: 3px solid #00ff9d !important;
+}
+
+.viz-gutter-dot::before {
+  content: '▶';
+  color: #00ff9d;
+  font-size: 11px;
+  margin-left: 4px;
+  text-shadow: 0 0 6px #00ff9d;
+}
