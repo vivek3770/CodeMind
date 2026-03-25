@@ -1,8 +1,8 @@
 """
 main.py — FastAPI application entry point.
 
-Run with:
-  uvicorn main:app --reload --port 8000
+Run from the ROOT project folder:
+  uvicorn backend.main:app --reload --port 8000
 
 Requires GEMINI_API_KEY in backend/.env
 Get a free key at: https://aistudio.google.com/app/apikey
@@ -10,10 +10,17 @@ Get a free key at: https://aistudio.google.com/app/apikey
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+import os
 
-load_dotenv()
+# Load .env from the backend/ directory regardless of where uvicorn is run from
+_dir = os.path.dirname(__file__)
+load_dotenv(os.path.join(_dir, ".env"))
 
-from backend.routers.ai import router as ai_router
+# Support running from project root OR from inside backend/
+try:
+    from backend.routers.ai import router as ai_router
+except ModuleNotFoundError:
+    from routers.ai import router as ai_router
 
 app = FastAPI(
     title="CodeMind IDE — AI Backend",
@@ -21,11 +28,11 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ── CORS — allow the Vite dev server and any local origin ──────
+# Allow ALL origins during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
