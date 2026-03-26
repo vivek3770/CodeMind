@@ -5,7 +5,7 @@
  */
 import { useState, useCallback } from 'react'
 
-const API_BASE = '/api'
+const API_BASE = 'http://127.0.0.1:8000/api'
 
 async function post(endpoint, body) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
