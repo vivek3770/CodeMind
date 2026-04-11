@@ -1,0 +1,326 @@
+/* ReviewHistory.module.css */
+
+.panel {
+  background: linear-gradient(180deg, var(--surface0) 0%, var(--deep) 100%);
+  border-left: 1px solid var(--border1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  min-width: 300px;
+}
+
+/* Header */
+.header {
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--surface1), var(--surface0));
+}
+
+.headerIcon { font-size: 18px; }
+
+.headerTitle {
+  font-weight: 700;
+  font-size: 13px;
+  flex: 1;
+  color: var(--tx0);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #58a6ff, #00ff9d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.closeBtn:hover { color: var(--red); background: var(--red-glow); }
+
+/* Body */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: var(--tx2);
+  font-size: 13px;
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--surface3);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error {
+  padding: 12px 14px;
+  background: rgba(255,68,102,0.08);
+  border: 1px solid rgba(255,68,102,0.25);
+  border-radius: var(--radius-lg);
+  color: var(--red);
+  font-size: 12px;
+}
+
+/* Empty state */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+  text-align: center;
+  flex: 1;
+}
+.emptyIcon  { font-size: 36px; opacity: 0.4; }
+.emptyTitle { font-size: 14px; font-weight: 700; color: var(--tx1); }
+.emptySub   { font-size: 12px; color: var(--tx3); line-height: 1.6; max-width: 200px; }
+.emptySub strong { color: var(--cyan-dim); }
+
+/* Stat cards */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.statCard {
+  background: var(--surface2);
+  border: 1px solid var(--border1);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 10px;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.statVal {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+/* Section */
+.section {
+  background: var(--surface1);
+  border: 1px solid var(--border1);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sectionTitle::before {
+  content: '';
+  width: 3px;
+  height: 10px;
+  background: var(--cyan);
+  border-radius: 2px;
+  box-shadow: 0 0 6px var(--cyan);
+}
+
+/* Trend chart */
+.chart { display: block; width: 100%; }
+.chartEmpty {
+  font-size: 11px;
+  color: var(--tx3);
+  text-align: center;
+  padding: 16px;
+  font-style: italic;
+}
+
+/* Issue bars */
+.issueBarRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.issueBarLabel {
+  font-size: 11px;
+  color: var(--tx2);
+  width: 72px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+.issueBarTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--surface3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.issueBarFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+.issueBarVal {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--tx2);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Per-file table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+.table th {
+  text-align: left;
+  color: var(--tx3);
+  font-weight: 600;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border0);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.table td {
+  padding: 5px 6px;
+  color: var(--tx1);
+  border-bottom: 1px solid var(--border0);
+}
+.table tr:last-child td { border-bottom: none; }
+.filename {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--cyan-dim);
+}
+
+/* Score badge */
+.scoreBadge {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+/* Review items */
+.reviewItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border0);
+}
+.reviewItem:last-child { border-bottom: none; }
+
+.reviewLeft  { flex: 1; min-width: 0; }
+.reviewFile  {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx0);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reviewMeta  {
+  font-size: 10px;
+  color: var(--tx3);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.reviewSummary {
+  font-size: 11px;
+  color: var(--tx2);
+  margin-top: 4px;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.bugChip {
+  background: rgba(255,68,102,0.12);
+  color: var(--red);
+  border: 1px solid rgba(255,68,102,0.25);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.secChip {
+  background: rgba(255,204,0,0.1);
+  color: var(--yellow);
+  border: 1px solid rgba(255,204,0,0.25);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Footer */
+.footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border1);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--surface0);
+}
