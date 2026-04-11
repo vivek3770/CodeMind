@@ -8,6 +8,9 @@ import FileExplorer    from './components/FileExplorer'
 import TabBar          from './components/TabBar'
 import Editor          from './components/Editor'
 import AIPanel         from './components/AIPanel'
+import ComplexityPanel  from './components/ComplexityPanel'
+import ReviewHistory    from './components/ReviewHistory/ReviewHistory'
+import SemanticSearch   from './components/SemanticSearch'
 import Visualizer      from './components/Visualizer/Visualizer'
 import CodeVisualizer  from './components/CodeVisualizer/CodeVisualizer'
 import StatusBar       from './components/StatusBar'
@@ -19,7 +22,7 @@ import './styles/globals.css'
 import styles from './App.module.css'
 
 // Right panel modes
-const PANEL = { AI: 'ai', ALGO: 'algo', CODE_VIZ: 'codeviz', NONE: 'none' }
+const PANEL = { AI: 'ai', ALGO: 'algo', CODE_VIZ: 'codeviz', HISTORY: 'history', NONE: 'none' }
 
 export default function App() {
   const {
@@ -37,6 +40,8 @@ export default function App() {
 
   // ── Panel state ───────────────────────────────────────────
   const [activePanel, setActivePanel] = useState(PANEL.AI)
+  const [complexityData,   setComplexityData]   = useState(null)
+  const [historyVisible,   setHistoryVisible]   = useState(false)
   const [sidebarW,    setSidebarW]    = useState(200)
   const [rightW,      setRightW]      = useState(360)
 
@@ -124,10 +129,25 @@ export default function App() {
   }
 
   // ── AI handlers ───────────────────────────────────────────
-  const handleReview  = () => {
-    setActivePanel(PANEL.AI)
-    reviewCode(getCurrentCode(), files[activeFile]?.language ?? 'python', activeFile)
+  const handleReview = async () => {
+  setActivePanel(PANEL.AI)
+  const code = getCurrentCode()
+  const lang = files[activeFile]?.language ?? 'python'
+  reviewCode(code, lang, activeFile)
+
+  // Also fetch complexity in parallel
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/complexity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, language: lang }),
+    })
+    const data = await res.json()
+    setComplexityData(data)
+  } catch (e) {
+    console.warn('Complexity analysis unavailable:', e.message)
   }
+}
   const handleExplain = () => {
     setActivePanel(PANEL.AI)
     explainCode(getCurrentCode(), files[activeFile]?.language ?? 'python')
@@ -235,6 +255,7 @@ export default function App() {
           className={`${styles.resizeHandle} ${isDragging === 'sidebar' ? styles.dragging : ''}`}
           onMouseDown={onMouseDownSidebar}
         />
+        
 
         {/* Editor */}
         <div className={styles.editorCol}>
@@ -270,6 +291,16 @@ export default function App() {
             onJumpToLine={jumpToLine} onClearReview={clearReview}
             onCopyReport={handleCopyReport} onApplyFix={handleApplyFix}
             onAddTestFile={handleAddTestFile}
+            onClose={() => setActivePanel(PANEL.NONE)}
+            onOpenHistory={() => setActivePanel(PANEL.HISTORY)}
+            complexityData={complexityData}
+            style={rightStyle}
+          />
+        )}
+
+        {/* Review History Panel */}
+        {activePanel === PANEL.HISTORY && (
+          <ReviewHistory
             onClose={() => setActivePanel(PANEL.NONE)}
             style={rightStyle}
           />

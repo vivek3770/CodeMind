@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { getIconForFilename } from '../utils/fileUtils'
 import styles from './FileExplorer.module.css'
+import SemanticSearch from './SemanticSearch'
 
 export default function FileExplorer({ files, activeFile, onOpenFile, onAddFile, onCloseFile, issueCounts = {}, style }) {
   const [showModal, setShowModal] = useState(false)
@@ -17,6 +18,15 @@ export default function FileExplorer({ files, activeFile, onOpenFile, onAddFile,
   return (
     <aside className={styles.sidebar} style={style}>
       <div className={styles.header}>Explorer</div>
+
+    <SemanticSearch
+      onResultClick={result => {
+        onOpenFile(result.filename)
+        setTimeout(() => {
+          // jumpToLine needs to be passed down from App.jsx
+        }, 100)
+      }}
+    />
 
       <div className={styles.tree}>
         <div className={styles.treeRoot}>▾ src/</div>

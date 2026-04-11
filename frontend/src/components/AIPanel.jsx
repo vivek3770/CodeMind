@@ -3,6 +3,7 @@ import ScoreCard    from './ScoreCard'
 import IssueSection from './IssueSection'
 import OutputPanel  from './OutputPanel'
 import styles from './AIPanel.module.css'
+import ComplexityPanel from './ComplexityPanel'
 
 const SECTIONS = [
   { key: 'bugs',        icon: '🐛', title: 'Bugs',        category: 'bugs'        },
@@ -18,11 +19,14 @@ const LOADING_LABELS = {
   tests:   'Writing unit tests',
 }
 
-export default function AIPanel({ style,
+export default function AIPanel({
   visible, loading, loadingAction,
   reviewResult, outputResult, error,
   onJumpToLine, onClearReview, onCopyReport,
   onApplyFix, onAddTestFile, onClose,
+  onOpenHistory,
+  complexityData,
+  style,
 }) {
   if (!visible) return null
 
@@ -87,6 +91,12 @@ export default function AIPanel({ style,
               summary={reviewResult.summary}
               scoreBreakdown={reviewResult.score_breakdown ?? reviewResult.scoreBreakdown ?? {}}
             />
+            {/* Complexity analysis */}
+            <ComplexityPanel
+              data={complexityData}
+              onJumpToLine={onJumpToLine}
+            />
+
             {SECTIONS.map(({ key, icon, title, category }) => (
               <IssueSection
                 key={key}
@@ -113,7 +123,8 @@ export default function AIPanel({ style,
       {/* Footer */}
       <div className={styles.footer}>
         <button className="btn" style={{ flex: 1 }} onClick={onClearReview}>🗑 Clear</button>
-        <button className="btn" style={{ flex: 1 }} onClick={onCopyReport}>📋 Copy Report</button>
+        <button className="btn" style={{ flex: 1 }} onClick={onCopyReport}>📋 Copy</button>
+        <button className="btn" style={{ flex: 1 }} onClick={onOpenHistory}>📈 History</button>
       </div>
     </aside>
   )
