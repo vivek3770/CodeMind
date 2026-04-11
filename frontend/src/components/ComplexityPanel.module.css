@@ -1,0 +1,189 @@
+/* ComplexityPanel.module.css */
+
+.section {
+  border: 1px solid var(--border1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface1);
+  flex-shrink: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: linear-gradient(90deg, var(--surface2), var(--surface1));
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.head:hover { background: linear-gradient(90deg, var(--surface3), var(--surface2)); }
+
+.icon  { font-size: 14px; flex-shrink: 0; }
+.title { font-size: 12px; font-weight: 700; flex: 1; color: var(--tx0); letter-spacing: 0.03em; }
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+.chevron {
+  color: var(--tx3);
+  font-size: 16px;
+  transition: transform 0.2s;
+}
+.chevronOpen { transform: rotate(90deg); }
+
+.body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--border1);
+}
+
+.error {
+  font-size: 11px;
+  color: var(--yellow);
+  padding: 6px 8px;
+  background: rgba(255,204,0,0.06);
+  border-radius: var(--radius-md);
+}
+
+/* File-level metrics */
+.fileMeta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.metaItem {
+  background: var(--surface2);
+  border: 1px solid var(--border0);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metaLabel { font-size: 9px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.08em; }
+.metaVal   { font-size: 14px; font-weight: 700; font-family: var(--font-mono); color: var(--tx0); }
+
+/* Function list */
+.funcList { display: flex; flex-direction: column; gap: 2px; }
+
+.funcHeader {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 44px;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+}
+
+.funcRow {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 44px;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.funcRow:hover { background: rgba(255,255,255,0.04); }
+
+.funcName {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--tx1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.funcLine {
+  font-size: 9px;
+  color: var(--tx3);
+  flex-shrink: 0;
+}
+
+.metricCell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.metricBar {
+  flex: 1;
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.metricFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.metricNum {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--tx2);
+  width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rankBadge {
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-align: center;
+}
+
+.noFuncs {
+  font-size: 11px;
+  color: var(--tx3);
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--border0);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+}
+
+.legendItem span:first-child {
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+.legendRange { color: var(--tx3); }
