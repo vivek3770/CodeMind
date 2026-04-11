@@ -12,6 +12,9 @@
 
 - **Monaco Editor** — VS Code-quality editor with syntax highlighting for multiple languages.
 - **AI Code Review** — Bug detection, security scanning, performance analysis, readability scoring, and overall code quality score.
+- **Code Complexity Analysis** — Deep breakdown of cyclomatic/cognitive complexity, maintainability index, and Halstead metrics.
+- **Semantic Code Search** — Context-aware semantic searching to easily find specific methods or logic across your codebase using AST parsing.
+- **Review History** — Persistent local storage to keep track of past AI code reviews across different programming sessions.
 - **Auto Fix** — AI rewrites your code with all issues fixed and applies it directly to the editor.
 - **Explain Code** — Structured, natural language explanation of what your code does, highlighting key components and execution flow.
 - **Generate Tests** — Automatic unit test generation for various frameworks (pytest, Jest, JUnit, etc.).
@@ -78,12 +81,17 @@ Open **http://127.0.0.1:8080**
 ```text
 codemind-ide/
 ├── backend/
+│   ├── data/                # Local JSON storage for review histories
 │   ├── main.py              # FastAPI entry point
 │   ├── models.py            # Pydantic schemas for requests/responses
 │   ├── routers/ai.py        # API endpoints for AI and visualization
 │   └── services/
 │       ├── llm.py           # Gemini AI integration (Review, Fix, Explain, Tests)
-│       └── code_tracer.py   # Safe Python execution and variable tracing
+│       ├── code_tracer.py   # Safe Python execution and variable tracing
+│       ├── code_chunker.py  # AST parser for segmenting code into chunks
+│       ├── code_indexer.py  # Local lightweight semantic search indexing
+│       ├── complexity_analyzer.py # Python cyclomatic/static code analysis 
+│       └── review_history.py # Service for storing/retrieving code reviews
 └── frontend/
     ├── package.json         # Vite and React dependencies
     ├── vite.config.js       # Vite configuration
