@@ -1,0 +1,2398 @@
+code,label,bug_class,description
+"def get_user_by_id(user_id: int):
+    """"""Retrieves a user record from the database by their ID using a parameterized query.""""""
+    query = ""SELECT id, name, email FROM users WHERE id = ?""
+    parameters = (user_id,)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated result for user_id {user_id}""",0,clean,This function retrieves a user's details from a database using their ID with a parameterized SELECT query to prevent SQL injection.
+"def get_products_by_category_and_price(category: str, min_price: float):
+    """"""Fetches products from a specific category that are above a minimum price using a parameterized query.""""""
+    query = ""SELECT product_id, name, price FROM products WHERE category = ? AND price > ?""
+    parameters = (category, min_price)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated results for category '{category}' and min_price {min_price}""",0,clean,"This function retrieves products matching a given category and minimum price, employing a parameterized query with multiple positional parameters."
+"def insert_log_entry(message: str, timestamp: str):
+    """"""Inserts a new log entry into the logs table using a parameterized INSERT statement.""""""
+    query = ""INSERT INTO logs (message, timestamp) VALUES (?, ?)""
+    parameters = (message, timestamp)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated insertion of log: '{message}' at '{timestamp}'""",0,clean,This function securely inserts a new log message and timestamp into a database table using a parameterized INSERT statement.
+"def update_product_quantity(product_id: int, new_quantity: int):
+    """"""Updates the quantity of a specific product in the inventory using a parameterized UPDATE statement.""""""
+    query = ""UPDATE inventory SET quantity = ? WHERE product_id = ?""
+    parameters = (new_quantity, product_id)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated update: product {product_id} quantity set to {new_quantity}""",0,clean,This function updates the quantity of a specific product in the inventory using a parameterized UPDATE statement for safe data modification.
+"def delete_user_comment(user_id: int, comment_id: int):
+    """"""Deletes a specific comment made by a user using a parameterized DELETE statement.""""""
+    query = ""DELETE FROM comments WHERE user_id = ? AND comment_id = ?""
+    parameters = (user_id, comment_id)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated deletion: comment {comment_id} by user {user_id}""",0,clean,This function safely deletes a specific user's comment from the database using a parameterized DELETE query.
+"def search_articles_by_title(search_term: str):
+    """"""Searches for articles whose titles match a given search term using a parameterized LIKE query.""""""
+    query = ""SELECT article_id, title, author FROM articles WHERE title LIKE ?""
+    parameters = (f""%{search_term}%"",)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated search results for articles with title like '%{search_term}%'""",0,clean,"This function searches for articles by title using a parameterized LIKE clause, ensuring the wildcard is part of the parameter for security."
+"def get_active_customers(is_active: bool):
+    """"""Retrieves all customer records that match an active status using a parameterized query.""""""
+    db_value = 1 if is_active else 0
+    query = ""SELECT customer_id, name, email FROM customers WHERE is_active = ?""
+    parameters = (db_value,)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated active customers results for is_active={is_active}""",0,clean,"This function retrieves customer records based on an active status, converting the boolean input to an integer for a parameterized query."
+"def get_orders_by_statuses(statuses: list[str]):
+    """"""Fetches orders matching a list of given statuses using a dynamically generated parameterized IN clause.""""""
+    if not statuses:
+        return []
+    placeholders = ', '.join(['?'] * len(statuses))
+    query = f""SELECT order_id, status, total FROM orders WHERE status IN ({placeholders})""
+    parameters = tuple(statuses)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated orders for statuses: {', '.join(statuses)}""",0,clean,"This function retrieves orders based on a list of statuses, dynamically constructing a secure parameterized IN clause for variable input."
+"def count_available_items(is_available: bool):
+    """"""Counts the total number of items that have a specific availability status using a parameterized query.""""""
+    db_value = 1 if is_available else 0
+    query = ""SELECT COUNT(*) FROM items WHERE is_available = ?""
+    parameters = (db_value,)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated count for available items (is_available={is_available}): 42""",0,clean,"This function counts items based on their availability status using a parameterized query, converting boolean input to a database-compatible integer."
+"def get_user_settings(user_id: int, setting_key: str):
+    """"""Retrieves a specific user setting using named parameters from a dictionary for the database query.""""""
+    query = ""SELECT value FROM user_settings WHERE user_id = :user_id AND key_name = :setting_key""
+    parameters = {""user_id"": user_id, ""setting_key"": setting_key}
+    print(f""Executing: '{query}' with named parameters: {parameters}"")
+    return f""Simulated result for user {user_id}'s setting '{setting_key}'""",0,clean,"This function retrieves a specific user setting using named parameters passed as a dictionary, a common method in some database APIs."
+"def get_user_by_id(conn, user_id):
+    """"""
+    Retrieves a single user record from the 'users' table by their ID using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""SELECT id, username, email FROM users WHERE id = ?""
+    cursor.execute(query, (user_id,))
+    user = cursor.fetchone()
+    cursor.close()
+    return user",0,clean,"Retrieves a single user's details by their ID, returning one row or None."
+"def get_products_by_category(conn, category_name):
+    """"""
+    Fetches all products belonging to a specific category from the 'products' table using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""SELECT id, name, description, price FROM products WHERE category = ?""
+    cursor.execute(query, (category_name,))
+    products = cursor.fetchall()
+    cursor.close()
+    return products",0,clean,Fetches a list of products that belong to a specified category.
+"def add_new_product(conn, name, description, price, category):
+    """"""
+    Inserts a new product record into the 'products' table with multiple parameters.
+    """"""
+    cursor = conn.cursor()
+    query = ""INSERT INTO products (name, description, price, category) VALUES (?, ?, ?, ?)""
+    try:
+        cursor.execute(query, (name, description, price, category))
+        conn.commit()
+        return cursor.lastrowid # Returns the ID of the newly inserted row
+    except Exception as e:
+        conn.rollback()
+        # In a real app, log error more robustly
+        return None
+    finally:
+        cursor.close()",0,clean,"Inserts a new product into the database, committing changes and returning the ID of the new row or None on failure."
+"def update_user_email(conn, user_id, new_email):
+    """"""
+    Updates the email address for a specific user identified by their ID using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""UPDATE users SET email = ? WHERE id = ?""
+    try:
+        cursor.execute(query, (new_email, user_id))
+        conn.commit()
+        return cursor.rowcount # Returns the number of rows affected
+    except Exception as e:
+        conn.rollback()
+        # In a real app, log error more robustly
+        return 0
+    finally:
+        cursor.close()",0,clean,"Updates a user's email address by their ID, committing changes and returning the count of affected rows."
+"def delete_product_by_id(conn, product_id):
+    """"""
+    Deletes a product record from the 'products' table by its ID using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""DELETE FROM products WHERE id = ?""
+    try:
+        cursor.execute(query, (product_id,))
+        conn.commit()
+        return cursor.rowcount > 0 # Returns True if a record was deleted, False otherwise
+    except Exception as e:
+        conn.rollback()
+        # In a real app, log error more robustly
+        return False
+    finally:
+        cursor.close()",0,clean,"Deletes a product record by its ID, returning True if successful or False if no record was deleted or an error occurred."
+"def get_customer_orders_by_date_range(conn, customer_id, start_date, end_date):
+    """"""
+    Fetches all orders for a given customer within a specified date range using multiple parameters.
+    """"""
+    cursor = conn.cursor()
+    query = """"""
+        SELECT id, product_id, order_date, total_amount
+        FROM orders
+        WHERE customer_id = ? AND order_date BETWEEN ? AND ?
+        ORDER BY order_date
+    """"""
+    cursor.execute(query, (customer_id, start_date, end_date))
+    orders = cursor.fetchall()
+    cursor.close()
+    return orders",0,clean,Retrieves a list of orders for a specific customer within a given date range.
+"def add_multiple_products_batch(conn, products_data):
+    """"""
+    Inserts multiple product records into the 'products' table in a single batch operation using executemany.
+    products_data should be a list of tuples, e.g., [(name1, desc1, price1, cat1), ...]
+    """"""
+    cursor = conn.cursor()
+    query = ""INSERT INTO products (name, description, price, category) VALUES (?, ?, ?, ?)""
+    try:
+        cursor.executemany(query, products_data)
+        conn.commit()
+        return cursor.rowcount # Returns the total number of rows inserted
+    except Exception as e:
+        conn.rollback()
+        # In a real app, log error more robustly
+        return 0
+    finally:
+        cursor.close()",0,clean,Inserts multiple product records efficiently in a batch operation using the `executemany` method.
+"def update_product_stock(conn, product_id, new_stock_level):
+    """"""
+    Updates the stock level for a specific product identified by its ID using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""UPDATE products SET stock_level = ? WHERE id = ?""
+    try:
+        cursor.execute(query, (new_stock_level, product_id))
+        conn.commit()
+        return cursor.rowcount # Returns the number of rows affected
+    except Exception as e:
+        conn.rollback()
+        # In a real app, log error more robustly
+        return 0
+    finally:
+        cursor.close()",0,clean,"Updates the stock level for a product by its ID, committing changes and returning the count of affected rows."
+"def get_user_count_by_status(conn, status):
+    """"""
+    Retrieves the total number of users with a specific status from the 'users' table using an aggregate query.
+    """"""
+    cursor = conn.cursor()
+    query = ""SELECT COUNT(id) FROM users WHERE status = ?""
+    cursor.execute(query, (status,))
+    count = cursor.fetchone()[0] # Fetch the single count value
+    cursor.close()
+    return count",0,clean,"Counts the number of users having a specific status, returning the integer count."
+"def get_distinct_product_categories(conn):
+    """"""
+    Fetches a list of all unique product categories present in the 'products' table.
+    """"""
+    cursor = conn.cursor()
+    query = ""SELECT DISTINCT category FROM products ORDER BY category""
+    cursor.execute(query)
+    categories = [row[0] for row in cursor.fetchall()] # Extract single column values
+    cursor.close()
+    return categories",0,clean,Retrieves a list of all distinct product categories from the database.
+"def get_user_profile(conn, user_id):
+    """"""
+    Retrieves a user's profile by their user ID using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""SELECT id, username, email, created_at FROM users WHERE id = ?""
+            cursor.execute(sql, (user_id,))
+            user_data = cursor.fetchone()
+            if user_data:
+                # Assuming user_data is a tuple, convert to dict for better readability
+                columns = [desc[0] for desc in cursor.description]
+                return dict(zip(columns, user_data))
+            return None
+    except Exception as e:
+        # In a real application, log the exception for debugging
+        return None",0,clean,"Retrieves a user's profile by their user ID, returning a dictionary if found, otherwise None, using a secure parameterized query."
+"def create_new_order(conn, customer_id, total_amount):
+    """"""
+    Inserts a new order into the database using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""INSERT INTO orders (customer_id, order_date, total_amount, status) VALUES (?, CURRENT_TIMESTAMP, ?, 'pending')""
+            cursor.execute(sql, (customer_id, total_amount))
+            conn.commit()
+            return True
+    except Exception as e:
+        # In a real application, log the exception and rollback
+        conn.rollback()
+        return False",0,clean,"Inserts a new order into the database, associating it with a customer and total amount, returning True on success, using a secure parameterized query."
+"def update_product_stock(conn, product_id, new_quantity):
+    """"""
+    Updates the stock quantity of a product by its ID using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""UPDATE products SET stock_quantity = ? WHERE id = ?""
+            cursor.execute(sql, (new_quantity, product_id))
+            conn.commit()
+            return cursor.rowcount > 0 # Check if any row was updated
+    except Exception as e:
+        # In a real application, log the exception and rollback
+        conn.rollback()
+        return False",0,clean,"Updates the stock quantity for a product identified by its ID, returning True on success, using a secure parameterized query."
+"def delete_item_from_cart(conn, user_id, item_id):
+    """"""
+    Deletes a specific item from a user's shopping cart using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""DELETE FROM shopping_cart WHERE user_id = ? AND item_id = ?""
+            cursor.execute(sql, (user_id, item_id))
+            conn.commit()
+            return cursor.rowcount > 0 # Check if any row was deleted
+    except Exception as e:
+        # In a real application, log the exception and rollback
+        conn.rollback()
+        return False",0,clean,"Deletes a specific item from a user's shopping cart based on user ID and item ID, returning True on success, using a secure parameterized query."
+"def find_products_by_category(conn, category_name):
+    """"""
+    Retrieves a list of products by category name using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""SELECT id, name, price, description FROM products WHERE category = ?""
+            cursor.execute(sql, (category_name,))
+            products_data = cursor.fetchall()
+            if products_data:
+                columns = [desc[0] for desc in cursor.description]
+                return [dict(zip(columns, row)) for row in products_data]
+            return []
+    except Exception as e:
+        # In a real application, log the exception
+        return []",0,clean,"Retrieves a list of products belonging to a specified category, returning a list of dictionaries, using a secure parameterized query."
+"def get_recent_transactions(conn, account_id, limit=10):
+    """"""
+    Fetches recent transactions for an account using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""SELECT id, amount, type, transaction_date FROM transactions WHERE account_id = ? ORDER BY transaction_date DESC LIMIT ?""
+            cursor.execute(sql, (account_id, limit))
+            transactions = cursor.fetchall()
+            if transactions:
+                columns = [desc[0] for desc in cursor.description]
+                return [dict(zip(columns, row)) for row in transactions]
+            return []
+    except Exception as e:
+        # In a real application, log the exception
+        return []",0,clean,"Fetches the most recent transactions for a given account, limited by a specified count, returning a list of dictionaries, using a secure parameterized query."
+"def bulk_insert_sensor_data(conn, sensor_readings):
+    """"""
+    Inserts multiple sensor readings into the database using executemany for efficiency and security.
+    `sensor_readings` should be a list of tuples, e.g., [(sensor_id, value, timestamp), ...].
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        if not sensor_readings:
+            return False
+        with conn.cursor() as cursor:
+            sql = ""INSERT INTO sensor_data (sensor_id, value, timestamp) VALUES (?, ?, ?)""
+            cursor.executemany(sql, sensor_readings)
+            conn.commit()
+            return True
+    except Exception as e:
+        # In a real application, log the exception and rollback
+        conn.rollback()
+        return False",0,clean,"Inserts multiple sensor readings in a single batch operation using `executemany`, returning True on success, demonstrating efficient and secure bulk inserts."
+"def toggle_feature_flag(conn, flag_name, is_enabled):
+    """"""
+    Toggles the status of a feature flag using a parameterized query.
+    `is_enabled` should be a boolean (or 0/1 for DB compatibility).
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""UPDATE feature_flags SET enabled = ? WHERE name = ?""
+            # Convert boolean to integer if the database expects 0/1
+            db_enabled_value = 1 if is_enabled else 0
+            cursor.execute(sql, (db_enabled_value, flag_name))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        # In a real application, log the exception and rollback
+        conn.rollback()
+        return False",0,clean,"Toggles the status of a specific feature flag by its name, setting it to an enabled/disabled boolean value, returning True on success, using a secure parameterized query."
+"def get_users_by_roles(conn, roles):
+    """"""
+    Retrieves users by a list of roles using a parameterized query with a dynamic IN clause.
+    `roles` should be a list of strings, e.g., ['admin', 'editor'].
+    Assumes `conn` is an active database connection object.
+    """"""
+    if not roles:
+        return []
+    
+    placeholders = ', '.join(['?'] * len(roles))
+    sql = f""SELECT id, username, email FROM users WHERE role IN ({placeholders})""
+    
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, tuple(roles))
+            users_data = cursor.fetchall()
+            if users_data:
+                columns = [desc[0] for desc in cursor.description]
+                return [dict(zip(columns, row)) for row in users_data]
+            return []
+    except Exception as e:
+        # In a real application, log the exception
+        return []",0,clean,"Retrieves users who have any of the specified roles using a dynamically constructed parameterized query for the IN clause, returning a list of dictionaries."
+"def check_username_availability(conn, username):
+    """"""
+    Checks if a username already exists in the database using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""SELECT 1 FROM users WHERE username = ?""
+            cursor.execute(sql, (username,))
+            result = cursor.fetchone()
+            return result is not None # True if a row was found, False otherwise
+    except Exception as e:
+        # In a real application, log the exception
+        return False # Assume unavailable or error occurred",0,clean,"Checks if a given username already exists in the `users` table, returning a boolean indicating availability, using a secure parameterized query."
+"def validate_email_address(email_input: str) -> bool:
+    """"""
+    Validates if a string represents a basic email address format.
+    Checks for presence of '@', at least one '.' after '@', and length constraints.
+    """"""
+    if not isinstance(email_input, str):
+        return False
+    trimmed_email = email_input.strip()
+    if len(trimmed_email) < 5 or len(trimmed_email) > 254:
+        return False
+    if trimmed_email.count('@') != 1:
+        return False
+    parts = trimmed_email.split('@')
+    local_part = parts[0]
+    domain_part = parts[1]
+    if not local_part or not domain_part:
+        return False
+    if '.' not in domain_part or domain_part.startswith('.') or domain_part.endswith('.'):
+        return False
+    if ' ' in local_part or ' ' in domain_part:
+        return False
+    return True",0,clean,"This function validates if a string has a basic email address format, including checks for '@', '.', and length."
+"def sanitize_for_html(text_input: str) -> str:
+    """"""
+    Escapes special HTML characters in a string to prevent XSS vulnerabilities.
+    Replaces characters like '<', '>', '&', '""', and ""'"" with their HTML entities.
+    """"""
+    if not isinstance(text_input, str):
+        return """"
+    sanitized_text = text_input.replace('&', '&amp;')
+    sanitized_text = sanitized_text.replace('<', '&lt;')
+    sanitized_text = sanitized_text.replace('>', '&gt;')
+    sanitized_text = sanitized_text.replace('""', '&quot;')
+    sanitized_text = sanitized_text.replace(""'"", '&#x27;')
+    return sanitized_text",0,clean,This function sanitizes a string by escaping special HTML characters to prevent cross-site scripting (XSS) attacks.
+"def validate_username(username: str) -> bool:
+    """"""
+    Validates a username string, ensuring it is alphanumeric,
+    between 3 and 20 characters long, and does not contain spaces.
+    """"""
+    if not isinstance(username, str):
+        return False
+    trimmed_username = username.strip()
+    if not (3 <= len(trimmed_username) <= 20):
+        return False
+    if not trimmed_username.isalnum():
+        return False
+    return True",0,clean,"This function validates a username, checking for alphanumeric characters, length constraints, and absence of spaces."
+"def validate_password_strength(password: str) -> bool:
+    """"""
+    Validates password strength, requiring a minimum length (8 characters),
+    at least one uppercase letter, one lowercase letter, and one digit.
+    """"""
+    if not isinstance(password, str):
+        return False
+    if len(password) < 8:
+        return False
+
+    has_upper = False
+    has_lower = False
+    has_digit = False
+
+    for char in password:
+        if char.isupper():
+            has_upper = True
+        elif char.islower():
+            has_lower = True
+        elif char.isdigit():
+            has_digit = True
+        if has_upper and has_lower and has_digit:
+            break
+
+    return has_upper and has_lower and has_digit",0,clean,"This function validates password strength by checking for minimum length, presence of uppercase, lowercase, and digit characters."
+"def sanitize_filename(filename_input: str) -> str:
+    """"""
+    Sanitizes a filename string by replacing invalid characters with underscores.
+    Removes path separators and other characters generally disallowed in filenames.
+    Limits the length to prevent abuse.
+    """"""
+    if not isinstance(filename_input, str):
+        return ""invalid_filename""
+
+    filename = filename_input.strip()
+    if not filename:
+        return ""empty_filename""
+
+    invalid_chars = '<>:""/\\|?*'
+    sanitized_chars = []
+    for char in filename:
+        if char in invalid_chars:
+            sanitized_chars.append('_')
+        elif char == '\0':
+            continue
+        else:
+            sanitized_chars.append(char)
+    
+    sanitized_name = """".join(sanitized_chars)
+    if len(sanitized_name) > 200:
+        sanitized_name = sanitized_name[:200]
+    
+    if not sanitized_name:
+        return ""sanitized_empty""
+
+    return sanitized_name",0,clean,This function sanitizes a filename by replacing characters that are invalid in file paths with underscores and removes null bytes.
+"def validate_positive_id(id_string: str, min_val: int = 1, max_val: int = 100000) -> bool:
+    """"""
+    Validates if a string represents a positive integer ID within a specified range.
+    """"""
+    if not isinstance(id_string, str):
+        return False
+    
+    trimmed_id_string = id_string.strip()
+    if not trimmed_id_string:
+        return False
+
+    for char in trimmed_id_string:
+        if not char.isdigit():
+            return False
+            
+    try:
+        id_value = int(trimmed_id_string)
+    except ValueError:
+        return False
+    
+    if id_value < min_val or id_value > max_val:
+        return False
+        
+    return True",0,clean,This function validates if a string represents a positive integer ID within a given numerical range.
+"def sanitize_and_validate_url(url_input: str) -> str:
+    """"""
+    Performs basic validation and sanitization for a URL string.
+    Checks for allowed schemes (http/https) and removes potentially malicious
+    schemes like 'javascript:'. Returns an empty string if invalid.
+    """"""
+    if not isinstance(url_input, str):
+        return """"
+    
+    trimmed_url = url_input.strip()
+    lower_url = trimmed_url.lower()
+
+    if lower_url.startswith('javascript:') or \
+       lower_url.startswith('data:') or \
+       lower_url.startswith('file:'):
+        return """"
+
+    if trimmed_url.startswith('http://') or trimmed_url.startswith('https://'):
+        return trimmed_url
+    elif '://' not in trimmed_url:
+        return ""https://"" + trimmed_url.replace(' ', '')
+    
+    return """"",0,clean,This function validates and sanitizes a URL string by ensuring it uses a safe scheme (http/https) and disallowing known malicious schemes.
+"def validate_date_format_yyyymmdd(date_string: str) -> bool:
+    """"""
+    Validates if a string is in YYYY-MM-DD format and its components are numeric.
+    Does not check for actual date validity (e.g., 30th February).
+    """"""
+    if not isinstance(date_string, str):
+        return False
+    
+    trimmed_date = date_string.strip()
+    if len(trimmed_date) != 10:
+        return False
+    
+    parts = trimmed_date.split('-')
+    if len(parts) != 3:
+        return False
+        
+    year_str, month_str, day_str = parts[0], parts[1], parts[2]
+    
+    if not (len(year_str) == 4 and year_str.isdigit()):
+        return False
+    if not (len(month_str) == 2 and month_str.isdigit()):
+        return False
+    if not (len(day_str) == 2 and day_str.isdigit()):
+        return False
+        
+    month_val = int(month_str)
+    day_val = int(day_str)
+    if not (1 <= month_val <= 12):
+        return False
+    if not (1 <= day_val <= 31):
+        return False
+
+    return True",0,clean,This function validates if a string adheres to the 'YYYY-MM-DD' date format and checks the numeric range of its components.
+"def sanitize_for_sql_string(input_string: str) -> str:
+    """"""
+    Sanitizes a string for basic SQL insertion by escaping single quotes
+    and removing null bytes to prevent simple SQL injection.
+    Note: Parameterized queries are the preferred and more secure method.
+    """"""
+    if not isinstance(input_string, str):
+        return """"
+    
+    sanitized_string = input_string.replace('\0', '') 
+    sanitized_string = sanitized_string.replace(""'"", ""''"")
+    sanitized_string = sanitized_string.strip()
+
+    return sanitized_string",0,clean,This function performs basic sanitization of a string for SQL insertion by escaping single quotes and removing null bytes.
+"def validate_phone_number_basic(phone_number: str) -> bool:
+    """"""
+    Validates a phone number string to ensure it contains only digits
+    (after an optional '+' prefix) and is within a reasonable length (7-15 digits).
+    """"""
+    if not isinstance(phone_number, str):
+        return False
+    
+    trimmed_number = phone_number.strip()
+    if not trimmed_number:
+        return False
+
+    if trimmed_number.startswith('+'):
+        number_digits = trimmed_number[1:]
+    else:
+        number_digits = trimmed_number
+        
+    for char in number_digits:
+        if not char.isdigit():
+            return False
+            
+    if not (7 <= len(number_digits) <= 15):
+        return False
+
+    return True",0,clean,"This function validates a phone number string, ensuring it contains only digits (optionally preceded by '+') and falls within a reasonable length range."
+"def validate_email(email_str: str) -> bool:
+    """"""
+    Validates if a string is a well-formed email address.
+    Checks for presence of '@' and '.', correct positioning, and overall length.
+    """"""
+    if not isinstance(email_str, str) or not (6 <= len(email_str) <= 254):
+        return False
+    
+    parts = email_str.split('@')
+    if len(parts) != 2:
+        return False
+    
+    local_part, domain_part = parts
+    if not local_part or not domain_part:
+        return False
+    
+    if not (1 <= len(local_part) <= 64) or not (1 <= len(domain_part) <= 253):
+        return False
+    
+    if '.' not in domain_part or domain_part.startswith('.') or domain_part.endswith('.'):
+        return False
+    
+    # Basic character check (simplistic, real validation is complex without regex)
+    allowed_chars = ""abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_""
+    if not all(c in allowed_chars for c in local_part.replace('.', '')) or \
+       not all(c in allowed_chars for c in domain_part.replace('.', '')):
+        return False
+
+    return True",0,clean,"This function validates if a given string represents a syntactically correct email address by checking for '@' and '.' presence, positioning, and character set."
+"def validate_username(username_str: str) -> bool:
+    """"""
+    Validates if a string is a valid username.
+    Must be alphanumeric, optionally containing underscores or hyphens, and within a specific length.
+    """"""
+    if not isinstance(username_str, str):
+        return False
+    
+    username_length = len(username_str)
+    if not (3 <= username_length <= 20):
+        return False
+    
+    allowed_chars = ""abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-""
+    
+    for char in username_str:
+        if char not in allowed_chars:
+            return False
+            
+    # Username cannot start or end with _ or -
+    if username_str.startswith('_') or username_str.startswith('-') or \
+       username_str.endswith('_') or username_str.endswith('-'):
+        return False
+
+    return True",0,clean,"This function validates if a given string is a valid username, ensuring it meets length and allowed character requirements."
+"def validate_positive_integer(input_str: str) -> int | None:
+    """"""
+    Validates if a string represents a positive integer and returns it,
+    otherwise returns None.
+    """"""
+    if not isinstance(input_str, str) or not input_str:
+        return None
+    
+    # Check if all characters are digits
+    if not input_str.isdigit():
+        return None
+    
+    # Convert to integer
+    num_val = int(input_str)
+    
+    # Ensure it's a positive integer
+    if num_val > 0:
+        return num_val
+    else:
+        return None",0,clean,"This function validates if a string represents a positive integer, returning the integer value or None if invalid."
+"def sanitize_html_input(user_input: str) -> str:
+    """"""
+    Performs basic sanitization of user input by escaping common HTML characters
+    to prevent XSS vulnerabilities.
+    """"""
+    if not isinstance(user_input, str):
+        return """" # Return empty string for invalid input type for safety
+        
+    sanitized_input = user_input.replace(""&"", ""&amp;"")
+    sanitized_input = sanitized_input.replace(""<"", ""&lt;"")
+    sanitized_input = sanitized_input.replace("">"", ""&gt;"")
+    sanitized_input = sanitized_input.replace('""', ""&quot;"")
+    sanitized_input = sanitized_input.replace(""'"", ""&#x27;"")
+    sanitized_input = sanitized_input.replace(""/"", ""&#x2F;"")
+    
+    return sanitized_input",0,clean,This function sanitizes user input by escaping HTML special characters to prevent basic cross-site scripting (XSS) attacks.
+"def validate_password_strength(password_str: str) -> bool:
+    """"""
+    Validates if a password string meets basic strength requirements:
+    minimum length, presence of uppercase, lowercase, and a digit.
+    """"""
+    if not isinstance(password_str, str):
+        return False
+    
+    if len(password_str) < 8:
+        return False
+    
+    has_lower = False
+    has_upper = False
+    has_digit = False
+    
+    for char in password_str:
+        if 'a' <= char <= 'z':
+            has_lower = True
+        elif 'A' <= char <= 'Z':
+            has_upper = True
+        elif '0' <= char <= '9':
+            has_digit = True
+            
+    return has_lower and has_upper and has_digit",0,clean,This function validates if a password string meets minimum strength criteria including length and the presence of different character types.
+"def validate_url(url_str: str) -> bool:
+    """"""
+    Performs a basic validation of a URL string, checking for scheme,
+    domain presence, and overall length.
+    """"""
+    if not isinstance(url_str, str) or not (10 <= len(url_str) <= 2048):
+        return False
+    
+    url_lower = url_str.lower()
+    
+    if not (url_lower.startswith(""http://"") or url_lower.startswith(""https://"")):
+        return False
+        
+    # Find where the domain part starts after the scheme
+    scheme_end = url_lower.find(""://"") + 3
+    if scheme_end == 2: # ""://"" not found (find returns -1 then +3 = 2)
+        return False
+    
+    domain_and_path = url_str[scheme_end:]
+    domain_part = domain_and_path.split('/', 1)[0] # Split only on first slash
+    
+    if not domain_part or '.' not in domain_part:
+        return False
+    
+    # Domain part cannot start or end with a hyphen or dot
+    if domain_part.startswith('-') or domain_part.endswith('-') or \
+       domain_part.startswith('.') or domain_part.endswith('.'):
+        return False
+    
+    # Check for general 'bad' characters in the domain (very basic)
+    forbidden_chars_in_domain = "" <>{}[]|\\^`""
+    if any(c in forbidden_chars_in_domain for c in domain_part):
+        return False
+    
+    return True",0,clean,"This function performs a basic validation of a URL string by checking its scheme, domain structure, and overall length."
+"def validate_us_phone_number(phone_str: str) -> str | None:
+    """"""
+    Validates if a string is a 10-digit US phone number, optionally with
+    separators, and returns the sanitized digits or None.
+    """"""
+    if not isinstance(phone_str, str) or not phone_str:
+        return None
+        
+    digits_only = """"
+    for char in phone_str:
+        if '0' <= char <= '9':
+            digits_only += char
+            
+    if len(digits_only) == 10:
+        return digits_only
+    else:
+        return None",0,clean,"This function validates if a string represents a 10-digit US phone number, sanitizing and returning only the digits if valid."
+"def validate_filename(filename: str) -> bool:
+    """"""
+    Validates a filename string for common security and OS-specific issues,
+    such as forbidden characters and path traversal attempts.
+    """"""
+    if not isinstance(filename, str) or not (1 <= len(filename) <= 255):
+        return False
+    
+    # Forbid common directory traversal elements and reserved names (e.g., Windows)
+    if filename in (""."", "".."", ""CON"", ""PRN"", ""AUX"", ""NUL"", ""COM1"", ""LPT1""):
+        return False
+        
+    # Forbid common path separators and other dangerous characters
+    forbidden_chars = '/\\:*?""<>|'
+    for char in filename:
+        if char in forbidden_chars:
+            return False
+            
+    # Cannot start or end with space, or have control characters
+    if filename.strip() != filename or any(ord(c) < 32 for c in filename):
+        return False
+
+    return True",0,clean,"This function validates a filename string, checking for forbidden characters, reserved names, and path traversal attempts."
+"def validate_decimal_amount(amount_str: str) -> float | None:
+    """"""
+    Validates if a string represents a positive decimal number (e.g., currency),
+    and returns it as a float or None.
+    """"""
+    if not isinstance(amount_str, str) or not amount_str:
+        return None
+    
+    # Allow only digits and one decimal point
+    decimal_points = amount_str.count('.')
+    if decimal_points > 1:
+        return None
+        
+    # Check if all characters (excluding potential single decimal point) are digits
+    if not amount_str.replace('.', '', 1).isdigit():
+        return None
+        
+    try:
+        amount_val = float(amount_str)
+        if amount_val > 0: # Must be positive
+            return amount_val
+        else:
+            return None
+    except ValueError: # Defensive catch, primarily handled by isdigit() check
+        return None",0,clean,"This function validates if a string represents a positive decimal number, returning it as a float or None."
+"def validate_iso_date_string(date_str: str) -> bool:
+    """"""
+    Validates if a string is a valid date in 'YYYY-MM-DD' format,
+    performing basic structural and range checks without imports.
+    """"""
+    if not isinstance(date_str, str) or len(date_str) != 10:
+        return False
+        
+    if date_str[4] != '-' or date_str[7] != '-':
+        return False
+        
+    year_str = date_str[0:4]
+    month_str = date_str[5:7]
+    day_str = date_str[8:10]
+    
+    if not (year_str.isdigit() and month_str.isdigit() and day_str.isdigit()):
+        return False
+        
+    year = int(year_str)
+    month = int(month_str)
+    day = int(day_str)
+    
+    # Basic range checks for common dates
+    if not (1000 <= year <= 9999): # Standard 4-digit year range
+        return False
+    if not (1 <= month <= 12):
+        return False
+    if not (1 <= day <= 31): # Simplistic max day, doesn't validate specific month/leap year
+        return False
+        
+    return True",0,clean,This function validates if a string is a date in 'YYYY-MM-DD' format by checking its structure and basic numerical ranges.
+"def validate_email(email_str):
+    """"""
+    Validates a basic email format by checking for an '@' symbol, a '.' after the '@',
+    and specific length constraints. Strips leading/trailing whitespace.
+    """"""
+    if not isinstance(email_str, str):
+        return False
+    
+    email = email_str.strip()
+    if not 5 <= len(email) <= 254:
+        return False
+
+    if '@' not in email:
+        return False
+
+    parts = email.split('@')
+    if len(parts) != 2:
+        return False
+
+    local_part, domain_part = parts
+    if not local_part or not domain_part:
+        return False
+
+    if '.' not in domain_part or domain_part.startswith('.') or domain_part.endswith('.'):
+        return False
+
+    return True",0,clean,"This function validates a basic email format, ensuring it contains an '@' and a '.' in the domain part, and adheres to length constraints."
+"def validate_username(username):
+    """"""
+    Validates a username to be alphanumeric, allowing underscores but not at the start or end,
+    and within a specific length range.
+    """"""
+    if not isinstance(username, str):
+        return False
+
+    user = username.strip()
+    if not 3 <= len(user) <= 20:
+        return False
+
+    if not user:
+        return False
+
+    if user.startswith('_') or user.endswith('_'):
+        return False
+
+    for char in user:
+        if not (char.isalnum() or char == '_'):
+            return False
+
+    return True",0,clean,"This function validates a username, ensuring it is between 3 and 20 characters, alphanumeric with optional underscores, and doesn't start or end with an underscore."
+"def validate_password_strength(password):
+    """"""
+    Validates password strength by checking for a minimum length of 8 characters
+    and the presence of at least one uppercase letter, one lowercase letter, and one digit.
+    """"""
+    if not isinstance(password, str):
+        return False
+
+    if len(password) < 8:
+        return False
+
+    has_upper = False
+    has_lower = False
+    has_digit = False
+
+    for char in password:
+        if 'A' <= char <= 'Z':
+            has_upper = True
+        elif 'a' <= char <= 'z':
+            has_lower = True
+        elif '0' <= char <= '9':
+            has_digit = True
+        
+        if has_upper and has_lower and has_digit:
+            break
+
+    return has_upper and has_lower and has_digit",0,clean,"This function validates password strength by enforcing a minimum length of 8 characters and requiring at least one uppercase letter, one lowercase letter, and one digit."
+"def sanitize_html_input(text):
+    """"""
+    Sanitizes user input by removing common dangerous HTML tags like <script>
+    and escaping characters like '<', '>', '&', '""', and ""'"".
+    """"""
+    if not isinstance(text, str):
+        return """"
+
+    sanitized_text = text.replace(""<script"", ""&lt;script"")
+    sanitized_text = sanitized_text.replace(""</script>"", ""&lt;/script&gt;"")
+    sanitized_text = sanitized_text.replace(""<"", ""&lt;"")
+    sanitized_text = sanitized_text.replace("">"", ""&gt;"")
+    sanitized_text = sanitized_text.replace(""&"", ""&amp;"")
+    sanitized_text = sanitized_text.replace('""', ""&quot;"")
+    sanitized_text = sanitized_text.replace(""'"", ""&#x27;"")
+
+    return sanitized_text.strip()",0,clean,This function sanitizes user text input by neutralizing script tags and escaping common HTML special characters to mitigate basic XSS vulnerabilities.
+"def validate_positive_integer_id(id_str):
+    """"""
+    Validates if a string represents a positive integer ID within a specified range (1 to 1,000,000).
+    """"""
+    if not isinstance(id_str, str):
+        return False
+
+    if not id_str.strip().isdigit():
+        return False
+
+    try:
+        id_value = int(id_str.strip())
+        if 1 <= id_value <= 1000000:
+            return True
+        else:
+            return False
+    except ValueError:
+        return False",0,clean,"This function validates if a string represents a positive integer ID, ensuring it falls within a predefined range and contains only digits."
+"def validate_url_scheme_and_domain(url_str):
+    """"""
+    Validates a URL string for a secure scheme (http/https) and a basic domain structure,
+    without full URL parsing.
+    """"""
+    if not isinstance(url_str, str):
+        return False
+
+    url = url_str.strip().lower()
+    
+    if not (url.startswith(""http://"") or url.startswith(""https://"")):
+        return False
+
+    scheme_len = 7 if url.startswith(""http://"") else 8
+    domain_start_index = scheme_len
+    
+    if len(url) <= domain_start_index:
+        return False
+
+    domain_part = url[domain_start_index:]
+    if '.' not in domain_part or domain_part.startswith('.') or domain_part.endswith('.'):
+        return False
+        
+    parts = domain_part.split('.')
+    if len(parts) < 2 or len(parts[-1]) < 2:
+        return False
+
+    return True",0,clean,This function validates a URL string by ensuring it uses a secure HTTP scheme and has a basic domain structure with a top-level domain.
+"def sanitize_filename(filename):
+    """"""
+    Sanitizes a filename string by replacing unsafe characters that could lead to path traversal
+    or create issues on various file systems.
+    """"""
+    if not isinstance(filename, str):
+        return ""invalid_filename""
+
+    unsafe_chars = ['/', '\\', ':', '*', '?', '""', '<', '>', '|', '\0', '..']
+    
+    sanitized = filename.strip()
+    if not sanitized:
+        return ""default_file""
+
+    for char in unsafe_chars:
+        if char == '..':
+            sanitized = sanitized.replace(char, '') 
+        else:
+            sanitized = sanitized.replace(char, '_')
+
+    if len(sanitized) > 255:
+        sanitized = sanitized[:255]
+
+    return sanitized",0,clean,This function sanitizes a filename string by replacing potentially unsafe characters with underscores and removing path traversal sequences to prevent file system vulnerabilities.
+"def validate_phone_number(phone_str):
+    """"""
+    Validates a phone number string to ensure it consists only of digits and has a specific length,
+    e.g., 10 digits for a North American number.
+    """"""
+    if not isinstance(phone_str, str):
+        return False
+
+    cleaned_number = """".join(filter(str.isdigit, phone_str))
+    
+    if len(cleaned_number) == 10:
+        return True
+    else:
+        return False",0,clean,This function validates a phone number string by removing all non-digit characters and then checking if the resulting string has exactly 10 digits.
+"def validate_currency_amount(amount_str):
+    """"""
+    Validates if a string represents a positive currency amount, allowing for at most two decimal places.
+    """"""
+    if not isinstance(amount_str, str):
+        return False
+
+    cleaned_amount = amount_str.strip()
+    if not cleaned_amount:
+        return False
+
+    if cleaned_amount.count('.') > 1:
+        return False
+    
+    parts = cleaned_amount.split('.')
+    if not all(p.isdigit() for p in parts):
+        return False
+        
+    if '.' in cleaned_amount and len(parts[1]) > 2:
+        return False
+    
+    try:
+        value = float(cleaned_amount)
+        return value >= 0
+    except ValueError:
+        return False",0,clean,"This function validates a string as a positive currency amount, ensuring it is a valid number with at most two decimal places."
+"def validate_date_string_format(date_str):
+    """"""
+    Validates a date string to ensure it strictly follows the YYYY-MM-DD format,
+    checking digit and hyphen placement and overall length.
+    """"""
+    if not isinstance(date_str, str):
+        return False
+
+    if len(date_str) != 10 or date_str[4] != '-' or date_str[7] != '-':
+        return False
+
+    parts = date_str.split('-')
+    if len(parts) != 3:
+        return False
+
+    year_str, month_str, day_str = parts
+
+    if not (year_str.isdigit() and len(year_str) == 4 and
+            month_str.isdigit() and len(month_str) == 2 and
+            day_str.isdigit() and len(day_str) == 2):
+        return False
+
+    try:
+        month = int(month_str)
+        day = int(day_str)
+        if not (1 <= month <= 12 and 1 <= day <= 31):
+            return False
+    except ValueError:
+        return False 
+
+    return True",0,clean,"This function validates a date string to ensure it strictly conforms to the YYYY-MM-DD format, checking for digit groups and hyphen placement."
+"def get_config_value(config_dict: dict | None, key: str, default_value: any) -> any:
+    """"""
+    Safely retrieves a value from a configuration dictionary, returning a default
+    if the dictionary is None or the key is not present.
+    """"""
+    if config_dict is None:
+        return default_value
+    return config_dict.get(key, default_value)",0,clean,"Safely retrieves a value from a configuration dictionary, returning a default if the dictionary is None or the key is not present."
+"def clean_and_lower_string(text: str | None) -> str:
+    """"""
+    Strips whitespace from a string and converts it to lowercase,
+    returning an empty string if the input is None.
+    """"""
+    if text is None:
+        return """"
+    return text.strip().lower()",0,clean,"Strips whitespace from a string and converts it to lowercase, returning an empty string if the input is None."
+"def calculate_total_amount(amounts: list[float | int | None] | None) -> float:
+    """"""
+    Calculates the sum of numbers in a list, treating None values as zero
+    and returning 0.0 if the input list is None.
+    """"""
+    total = 0.0
+    if amounts is None:
+        return total
+    for amount in amounts:
+        if amount is not None:
+            total += float(amount)
+    return total",0,clean,"Calculates the sum of numbers in a list, treating None values as zero and returning 0.0 if the input list is None."
+"class User:
+    def __init__(self, name: str, email: str | None):
+        self.name = name
+        self.email = email
+
+def get_user_email(user_obj: User | None, default_email: str = ""no_email@example.com"") -> str:
+    """"""
+    Safely retrieves the email attribute from a User object, returning a default
+    if the object is None or its email attribute is None.
+    """"""
+    if user_obj is None or user_obj.email is None:
+        return default_email
+    return user_obj.email",0,clean,"Safely retrieves the email attribute from a User object, returning a default if the object is None or its email attribute is None."
+"def calculate_product_price(base_price: float | int | None, quantity: int | None) -> float:
+    """"""
+    Calculates the total product price by multiplying base price and quantity,
+    returning 0.0 if either input is None.
+    """"""
+    if base_price is None or quantity is None:
+        return 0.0
+    return float(base_price) * float(quantity)",0,clean,"Calculates the total product price by multiplying base price and quantity, returning 0.0 if either input is None."
+"def filter_valid_names(names_list: list[str | None] | None) -> list[str]:
+    """"""
+    Filters a list of names, returning a new list containing only
+    non-None and non-empty strings. Returns an empty list if input is None.
+    """"""
+    valid_names = []
+    if names_list is None:
+        return valid_names
+    for name in names_list:
+        if name is not None and name.strip(): # Check for non-empty after stripping
+            valid_names.append(name.strip())
+    return valid_names",0,clean,"Filters a list of names, returning a new list containing only non-None and non-empty strings, or an empty list if the input is None."
+"def get_nested_dict_value(data: dict | None, keys: list[str], default: any = None) -> any:
+    """"""
+    Safely retrieves a value from a nested dictionary given a list of keys,
+    returning a default value if any intermediate dictionary or the final value is None.
+    """"""
+    if data is None:
+        return default
+    
+    current_level = data
+    for key in keys:
+        if not isinstance(current_level, dict) or current_level.get(key) is None:
+            return default
+        current_level = current_level.get(key)
+    return current_level",0,clean,"Safely retrieves a value from a nested dictionary given a list of keys, returning a default if any intermediate dictionary or the final value is None."
+"class Item:
+    def __init__(self, item_id: str, quantity: int | None):
+        self.item_id = item_id
+        self.quantity = quantity
+
+def extract_valid_quantities(items: list[Item | None] | None) -> list[int]:
+    """"""
+    Extracts valid quantities from a list of Item objects,
+    ignoring None items or items with None quantities.
+    Returns an empty list if input is None.
+    """"""
+    quantities = []
+    if items is None:
+        return quantities
+    for item in items:
+        if item is not None and item.quantity is not None:
+            quantities.append(item.quantity)
+    return quantities",0,clean,"Extracts valid quantities from a list of Item objects, ignoring None items or items with None quantities, and returns an empty list if the input is None."
+"def parse_optional_int(s_value: str | None, default_int: int = 0) -> int:
+    """"""
+    Parses an optional string value to an integer, returning a default
+    if the string is None or cannot be converted to an integer.
+    """"""
+    if s_value is None:
+        return default_int
+    try:
+        return int(s_value)
+    except (ValueError, TypeError):
+        return default_int",0,clean,"Parses an optional string value to an integer, returning a default if the string is None or cannot be converted to an integer."
+"def perform_action_if_enabled(is_enabled: bool | None, action_name: str) -> str:
+    """"""
+    Performs a hypothetical action if 'is_enabled' is explicitly True,
+    otherwise indicates that the action was skipped or disabled.
+    Handles None 'is_enabled' flags by treating them as disabled.
+    """"""
+    if is_enabled is True: # Explicitly check for True, not just truthiness
+        return f""Action '{action_name}' performed successfully.""
+    else:
+        return f""Action '{action_name}' skipped (disabled or not enabled).""",0,clean,"Performs a hypothetical action if an 'is_enabled' flag is explicitly True, otherwise indicates that the action was skipped or disabled, treating None flags as disabled."
+"def process_user_input(input_string):
+    """"""
+    Processes a user input string, returning a stripped and lowercased version,
+    or None if the input string itself is None or empty after stripping.
+    """"""
+    if input_string is None:
+        return None
+    
+    cleaned_string = str(input_string).strip().lower()
+    if not cleaned_string: # Also handles empty strings after stripping
+        return None
+    return cleaned_string",0,clean,"Processes a user input string by stripping whitespace and lowercasing it, returning None if the input is None or becomes empty after processing."
+"def get_first_element(data_list):
+    """"""
+    Returns the first element of a list if the list is not None and not empty,
+    otherwise returns None.
+    """"""
+    if data_list is None:
+        return None
+    if not isinstance(data_list, list):
+        return None
+    if not data_list:
+        return None
+    return data_list[0]",0,clean,"Retrieves the first element from a list, returning None if the list is None, not a list, or empty."
+"def get_config_value(config_dict, key, default_value=None):
+    """"""
+    Retrieves a value from a configuration dictionary for a given key,
+    returning a default value if the dictionary is None or the key is not found.
+    """"""
+    if config_dict is None:
+        return default_value
+    if not isinstance(config_dict, dict):
+        return default_value
+    return config_dict.get(key, default_value)",0,clean,"Safely retrieves a value from a dictionary using a key, returning a specified default value if the dictionary is None, not a dictionary, or the key is not present."
+"class Product:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
+def get_product_name(product_obj):
+    """"""
+    Returns the name attribute of a Product object, or None if the object
+    itself is None or not a Product instance.
+    """"""
+    if product_obj is None:
+        return None
+    if not isinstance(product_obj, Product):
+        return None
+    return product_obj.name",0,clean,"Safely extracts the 'name' attribute from a Product object, returning None if the input object is None or not an instance of Product."
+"def calculate_discounted_price(original_price, discount_percentage):
+    """"""
+    Calculates the discounted price given an original price and a discount percentage.
+    Returns None if either input is None, not a valid number (int/float), or outside valid ranges.
+    """"""
+    if original_price is None or discount_percentage is None:
+        return None
+    
+    if not isinstance(original_price, (int, float)) or not isinstance(discount_percentage, (int, float)):
+        return None
+
+    if original_price < 0:
+        return None
+
+    if not (0 <= discount_percentage <= 100):
+        return None
+        
+    discount_factor = (100 - discount_percentage) / 100
+    return original_price * discount_factor",0,clean,"Computes a discounted price, returning None if the original price or discount percentage is None, not numeric, or outside valid ranges."
+"def get_user_display_name(first_name, last_name, username=None):
+    """"""
+    Generates a display name for a user. Prioritizes first_name + last_name,
+    then username, otherwise returns a generic default. Handles None inputs gracefully.
+    """"""
+    full_name = f""{first_name or ''} {last_name or ''}"".strip()
+    
+    return full_name or username or ""Anonymous User""",0,clean,"Constructs a user's display name, prioritizing full name, then username, falling back to ""Anonymous User"" if all are None or empty."
+"class ContactInfo:
+    def __init__(self, email):
+        self.email = email
+
+class UserProfile:
+    def __init__(self, contact):
+        self.contact = contact
+
+class User:
+    def __init__(self, profile):
+        self.profile = profile
+
+def extract_contact_email(user_obj):
+    """"""
+    Extracts the contact email from a nested User object structure.
+    Returns None if any part of the path (user, profile, contact, email) is None.
+    """"""
+    if user_obj is None:
+        return None
+    
+    profile = getattr(user_obj, 'profile', None)
+    if profile is None:
+        return None
+        
+    contact = getattr(profile, 'contact', None)
+    if contact is None:
+        return None
+        
+    email = getattr(contact, 'email', None)
+    return email",0,clean,"Safely extracts a contact email from a nested object structure (User -> UserProfile -> ContactInfo -> email), returning None if any intermediate object or the final attribute is None."
+"def get_status_message(status_code, error_message=None):
+    """"""
+    Generates a status message based on a status code and an optional error message.
+    Returns different messages depending on the presence of an error or the status code.
+    """"""
+    if error_message is not None and str(error_message).strip():
+        return f""Error: {error_message}""
+    
+    if status_code is None:
+        return ""Status unknown.""
+    
+    if status_code == 200:
+        return ""Operation successful.""
+    elif status_code >= 400 and status_code < 500:
+        return ""Client error occurred.""
+    elif status_code >= 500:
+        return ""Server error occurred.""
+    else:
+        return f""Status: {status_code}""",0,clean,"Creates a status message, prioritizing a provided error message, otherwise reporting based on the status code, or ""Status unknown"" if the status code is None."
+"def log_event(event_type, message, details=None):
+    """"""
+    Logs an event with its type, message, and optional details.
+    Handles 'details' being None by representing it as 'N/A' in the log output.
+    """"""
+    if details is None:
+        detail_str = ""N/A""
+    else:
+        detail_str = str(details)
+    
+    return f""Event Type: {event_type}, Message: {message}, Details: {detail_str}""",0,clean,"Generates a log string for an event, replacing None details with ""N/A""."
+"def parse_coordinates(coordinate_tuple):
+    """"""
+    Parses a tuple representing (x, y) coordinates.
+    Returns (None, None) if the input is None, not a tuple, does not have exactly two elements,
+    or contains non-numeric elements.
+    """"""
+    if coordinate_tuple is None:
+        return (None, None)
+    
+    if not isinstance(coordinate_tuple, tuple):
+        return (None, None)
+        
+    if len(coordinate_tuple) != 2:
+        return (None, None)
+        
+    x, y = coordinate_tuple
+    
+    if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+        return (None, None)
+
+    return (x, y)",0,clean,"Parses a 2-element coordinate tuple (x, y), returning (None, None) if the input is None, not a tuple, has an incorrect length, or contains non-numeric elements."
+"def safe_divide(numerator: float, denominator: float) -> float | str:
+    """"""
+    Performs division safely, returning an error message if the denominator is zero or inputs are not numeric.
+    """"""
+    if not isinstance(numerator, (int, float)) or not isinstance(denominator, (int, float)):
+        return ""Error: Both numerator and denominator must be numbers.""
+    if denominator == 0:
+        return ""Error: Cannot divide by zero.""
+    return numerator / denominator",0,clean,"This function safely divides two numbers, performing type checks and returning an error message if the denominator is zero."
+"def calculate_percentage_change(old_value: float, new_value: float) -> float | str:
+    """"""
+    Calculates the percentage change between an old value and a new value,
+    handling cases where the old value is zero or inputs are not numeric.
+    """"""
+    if not isinstance(old_value, (int, float)) or not isinstance(new_value, (int, float)):
+        return ""Error: Both values must be numbers.""
+    if old_value == 0:
+        if new_value == 0:
+            return 0.0  # No change if both are zero
+        return ""Error: Cannot calculate percentage change from zero old value unless new value is also zero.""
+    return ((new_value - old_value) / old_value) * 100",0,clean,"This function calculates the percentage change between two values, explicitly handling cases where the original value is zero to prevent division errors and validating input types."
+"def calculate_list_average(numbers: list[float]) -> float | str:
+    """"""
+    Calculates the average of a list of numbers, returning an error if the list is empty
+    or contains non-numeric values.
+    """"""
+    if not isinstance(numbers, list):
+        return ""Error: Input must be a list.""
+    if not numbers:
+        return ""Error: Cannot calculate average of an empty list.""
+    
+    total = 0.0
+    for num in numbers:
+        if not isinstance(num, (int, float)):
+            return ""Error: All elements in the list must be numbers.""
+        total += num
+    return total / len(numbers)",0,clean,"This function computes the average of a list of numbers, ensuring the list is not empty and all its elements are numeric to prevent division by zero and type errors."
+"def dot_product(vec1: list[float], vec2: list[float]) -> float | str:
+    """"""
+    Calculates the dot product of two numerical vectors, ensuring they are of equal length
+    and contain only numbers.
+    """"""
+    if not isinstance(vec1, list) or not isinstance(vec2, list):
+        return ""Error: Both inputs must be lists.""
+    if len(vec1) != len(vec2):
+        return ""Error: Vectors must have the same length.""
+    if not vec1: # Handles empty vectors resulting in 0 dot product
+        return 0.0
+    
+    result = 0.0
+    for i in range(len(vec1)):
+        if not isinstance(vec1[i], (int, float)) or not isinstance(vec2[i], (int, float)):
+            return ""Error: Both vectors must contain only numbers.""
+        result += vec1[i] * vec2[i]
+    return result",0,clean,"This function computes the dot product of two numeric vectors, validating that inputs are lists of equal length and contain only numbers."
+"def scale_to_range(value: float, source_min: float, source_max: float, target_min: float, target_max: float) -> float | str:
+    """"""
+    Scales a given value from a source range to a target range,
+    handling cases where the source range is invalid (e.g., min == max) or inputs are not numeric.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [value, source_min, source_max, target_min, target_max]):
+        return ""Error: All arguments must be numbers.""
+        
+    if source_min == source_max:
+        return ""Error: Source range minimum and maximum cannot be equal.""
+        
+    scaled_value = (value - source_min) * (target_max - target_min) / (source_max - source_min) + target_min
+    return scaled_value",0,clean,"This function scales a numeric value from a specified source range to a target range, explicitly checking for a zero-sized source range to prevent division errors and validating input types."
+"def calculate_future_value(principal: float, annual_rate: float, years: int, compounds_per_year: int) -> float | str:
+    """"""
+    Calculates the future value of an investment with compound interest,
+    validating inputs to ensure they are positive and sensible.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [principal, annual_rate]) or not all(isinstance(arg, int) for arg in [years, compounds_per_year]):
+        return ""Error: Principal and annual rate must be numbers, years and compounds_per_year integers.""
+    if principal < 0:
+        return ""Error: Principal cannot be negative.""
+    if annual_rate < -1.0:
+        return ""Error: Annual rate cannot be less than -1.0 (or -100%).""
+    if years < 0:
+        return ""Error: Years cannot be negative.""
+    if compounds_per_year <= 0:
+        return ""Error: Compounds per year must be a positive integer.""
+        
+    rate_per_period = annual_rate / compounds_per_year
+    num_periods = years * compounds_per_year
+    
+    future_value = principal * (1 + rate_per_period) ** num_periods
+    return round(future_value, 2)",0,clean,"This function calculates the future value of an investment using compound interest, performing robust input validation to ensure positive principal, sensible rates, and positive compounding periods."
+"def normalize_vector(vector: list[float]) -> list[float] | str:
+    """"""
+    Normalizes a vector to its L2-norm, returning an error if the vector is empty,
+    contains non-numeric values, or if its magnitude is zero.
+    """"""
+    if not isinstance(vector, list):
+        return ""Error: Input must be a list.""
+    if not vector:
+        return ""Error: Cannot normalize an empty vector.""
+        
+    magnitude_sq = 0.0
+    for x in vector:
+        if not isinstance(x, (int, float)):
+            return ""Error: All elements in the vector must be numbers.""
+        magnitude_sq += x * x
+        
+    magnitude = magnitude_sq ** 0.5
+    
+    if magnitude == 0:
+        return ""Error: Cannot normalize a zero vector (magnitude is zero).
+    ""
+        
+    normalized_vector = [x / magnitude for x in vector]
+    return normalized_vector",0,clean,"This function normalizes a numeric vector to its L2-norm, checking for empty vectors, non-numeric elements, and specifically preventing division by zero if the vector's magnitude is zero."
+"def calculate_simple_moving_average(data: list[float], window_size: int) -> list[float] | str:
+    """"""
+    Calculates the simple moving average for a list of numeric data over a specified window size,
+    handling invalid window sizes or non-numeric data.
+    """"""
+    if not isinstance(data, list) or not isinstance(window_size, int):
+        return ""Error: Data must be a list and window_size an integer.""
+    if window_size <= 0:
+        return ""Error: Window size must be a positive integer.""
+    if window_size > len(data):
+        return ""Error: Window size cannot be greater than the number of data points.""
+        
+    moving_averages = []
+    for i in range(len(data) - window_size + 1):
+        window = data[i:i + window_size]
+        current_sum = 0.0
+        for item in window:
+            if not isinstance(item, (int, float)):
+                return ""Error: All data points must be numbers.""
+            current_sum += item
+        moving_averages.append(current_sum / window_size)
+        
+    return moving_averages",0,clean,"This function computes the simple moving average for a list of numeric data over a given window size, validating the window size to be positive and ensuring all data points are numbers."
+"def sum_geometric_progression(first_term: float, common_ratio: float, num_terms: int) -> float | str:
+    """"""
+    Calculates the sum of a geometric progression, handling cases where the common ratio is 1
+    or inputs are invalid.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [first_term, common_ratio]) or not isinstance(num_terms, int):
+        return ""Error: First term and common ratio must be numbers, number of terms an integer.""
+    if num_terms < 0:
+        return ""Error: Number of terms cannot be negative.""
+    if num_terms == 0:
+        return 0.0
+        
+    if common_ratio == 1:
+        return first_term * num_terms
+    else:
+        return first_term * (1 - common_ratio**num_terms) / (1 - common_ratio)",0,clean,"This function calculates the sum of a geometric progression, including an explicit check for a common ratio of 1 to prevent division by zero, and validates input types and term count."
+"def calculate_sample_standard_deviation(data: list[float]) -> float | str:
+    """"""
+    Calculates the sample standard deviation for a list of numeric data,
+    ensuring there are at least two data points to prevent division by zero.
+    """"""
+    if not isinstance(data, list):
+        return ""Error: Input must be a list.""
+    if len(data) < 2:
+        return ""Error: At least two data points are required to calculate sample standard deviation.""
+        
+    total = 0.0
+    for x in data:
+        if not isinstance(x, (int, float)):
+            return ""Error: All elements in the data list must be numbers.""
+        total += x
+    
+    mean = total / len(data)
+    
+    sum_sq_diff = 0.0
+    for x in data:
+        sum_sq_diff += (x - mean) ** 2
+        
+    variance = sum_sq_diff / (len(data) - 1)
+    std_dev = variance ** 0.5
+    
+    return std_dev",0,clean,"This function calculates the sample standard deviation for a list of numeric data, verifying that there are at least two data points to prevent division by zero in the variance calculation."
+"def safe_divide(numerator: float, denominator: float) -> float | None:
+    """"""
+    Performs division safely, returning None if the denominator is zero.
+    """"""
+    if denominator == 0:
+        return None
+    return numerator / denominator",0,clean,"Calculates the division of two numbers, returning None if the denominator is zero."
+"def calculate_percentage(part: float, total: float) -> float:
+    """"""
+    Calculates the percentage of a part relative to a total.
+    Returns 0.0 if the total is zero, effectively treating part/0 as 0% for practical purposes.
+    """"""
+    if total == 0:
+        return 0.0
+    return (part / total) * 100.0",0,clean,"Calculates a percentage, returning 0.0 if the total value is zero."
+"def calculate_safe_average(numbers: list[float]) -> float | None:
+    """"""
+    Calculates the average of a list of numbers, returning None for an empty list.
+    """"""
+    if not numbers:
+        return None
+    total_sum = sum(numbers)
+    count = len(numbers)
+    return total_sum / count",0,clean,"Computes the average of a list of floats, returning None if the list is empty to prevent division by zero."
+"def calculate_robust_ratio(value_a: float, value_b: float, tolerance: float = 1e-9) -> float:
+    """"""
+    Calculates the ratio of value_a to value_b, handling cases where value_b is zero or near zero.
+    Returns 0.0 if value_b is within the specified tolerance of zero.
+    """"""
+    if abs(value_b) < tolerance:
+        return 0.0
+    return value_a / value_b",0,clean,"Calculates a ratio, returning 0.0 if the denominator is zero or negligibly close to zero using a tolerance."
+"def calculate_rate(quantity: float, duration_seconds: float) -> float:
+    """"""
+    Calculates a rate (quantity per duration), handling zero duration.
+    If duration is zero, returns 0.0 to indicate no rate could be established or an infinite rate is not desired.
+    """"""
+    if duration_seconds == 0.0:
+        return 0.0
+    return quantity / duration_seconds",0,clean,"Calculates a rate of quantity per unit duration, returning 0.0 if the duration is zero."
+"def calculate_weighted_average(values: list[float], weights: list[float]) -> float | None:
+    """"""
+    Calculates the weighted average of values.
+    Returns None if the total weight is zero, preventing division by zero.
+    """"""
+    if not values or not weights or len(values) != len(weights):
+        return None
+
+    weighted_sum = sum(v * w for v, w in zip(values, weights))
+    total_weight = sum(weights)
+
+    if total_weight == 0:
+        return None
+    
+    return weighted_sum / total_weight",0,clean,"Computes the weighted average of a list of values, returning None if the total weight is zero or inputs are invalid."
+"def calculate_safe_reciprocal(number: float, default_value: float = 0.0) -> float:
+    """"""
+    Calculates the reciprocal (1/number), returning a default value if number is zero.
+    """"
+    if number == 0:
+        return default_value
+    return 1.0 / number",0,clean,"Calculates the reciprocal of a number, returning a specified default value if the number is zero."
+"def calculate_percentage_change(old_value: float, new_value: float) -> float:
+    """"""
+    Calculates the percentage change from an old value to a new value.
+    Handles zero old_value by returning 0.0 if new_value is also zero,
+    otherwise returns float('inf') for positive change or float('-inf') for negative change.
+    """"""
+    if old_value == 0.0:
+        if new_value == 0.0:
+            return 0.0
+        else:
+            return float('inf') if new_value > 0 else float('-inf')
+            
+    return ((new_value - old_value) / old_value) * 100.0",0,clean,"Calculates the percentage change between two values, handling zero old_value scenarios by returning 0.0, float('inf'), or float('-inf')."
+"def calculate_sum_of_squares(numbers: list[float]) -> float:
+    """"""
+    Calculates the sum of squares for a list of numbers.
+    Returns 0.0 if the list is empty, as the sum of no squares is zero.
+    """"""
+    if not numbers:
+        return 0.0
+    
+    total_square_sum = 0.0
+    for num in numbers:
+        total_square_sum += num * num
+    return total_square_sum",0,clean,"Calculates the sum of squares for a list of numbers, returning 0.0 if the list is empty."
+"def calculate_safe_dot_product(vec1: list[float], vec2: list[float]) -> float:
+    """"""
+    Calculates the dot product of two vectors.
+    Returns 0.0 if either vector is empty or if their lengths mismatch,
+    as a dot product is conventionally zero or undefined in these cases.
+    """"""
+    if not vec1 or not vec2 or len(vec1) != len(vec2):
+        return 0.0
+    
+    dot_product_sum = 0.0
+    for i in range(len(vec1)):
+        dot_product_sum += vec1[i] * vec2[i]
+    return dot_product_sum",0,clean,"Calculates the dot product of two vectors, returning 0.0 if either vector is empty or their lengths do not match."
+"def calculate_final_cost(item_prices: list[float], discount_percentage: float) -> float:
+    """"""
+    Calculates the total cost of multiple items after applying a percentage discount.
+    """"""
+    if not isinstance(item_prices, list) or not all(isinstance(p, (int, float)) for p in item_prices):
+        raise TypeError(""item_prices must be a list of numbers."")
+    if not isinstance(discount_percentage, (int, float)):
+        raise TypeError(""discount_percentage must be a number."")
+    if not (0 <= discount_percentage <= 100):
+        raise ValueError(""Discount percentage must be between 0 and 100."")
+
+    total_gross_cost = sum(item_prices)
+    discount_factor = (100 - discount_percentage) / 100.0
+    final_cost = total_gross_cost * discount_factor
+    return max(0.0, final_cost)",0,clean,"Calculates the final cost of a list of items after applying a percentage discount, ensuring the cost is not negative."
+"def calculate_weighted_average(values: list[float], weights: list[float]) -> float:
+    """"""
+    Computes the weighted average of a list of values and their corresponding weights.
+    Raises ZeroDivisionError if the sum of weights is zero.
+    """"""
+    if not isinstance(values, list) or not all(isinstance(v, (int, float)) for v in values):
+        raise TypeError(""values must be a list of numbers."")
+    if not isinstance(weights, list) or not all(isinstance(w, (int, float)) for w in weights):
+        raise TypeError(""weights must be a list of numbers."")
+    if len(values) != len(weights):
+        raise ValueError(""Values and weights lists must have the same length."")
+    if not values: 
+        return 0.0
+
+    sum_of_products = sum(v * w for v, w in zip(values, weights))
+    sum_of_weights = sum(weights)
+
+    weighted_avg = sum_of_products / sum_of_weights
+    return weighted_avg",0,clean,"Computes the weighted average of numerical values and their corresponding weights, raising ZeroDivisionError if the total weight is zero."
+"def calculate_compound_future_value(principal: float, annual_rate: float, years: int, compounds_per_year: int) -> float:
+    """"""
+    Calculates the future value of an investment with compound interest.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [principal, annual_rate]):
+        raise TypeError(""Principal and annual rate must be numbers."")
+    if not all(isinstance(arg, int) for arg in [years, compounds_per_year]):
+        raise TypeError(""Years and compounds_per_year must be integers."")
+    if principal < 0:
+        raise ValueError(""Principal cannot be negative."")
+    if years < 0:
+        raise ValueError(""Years cannot be negative."")
+    if compounds_per_year <= 0:
+        raise ValueError(""Compounds per year must be a positive integer."")
+
+    rate_per_period = annual_rate / compounds_per_year
+    total_periods = years * compounds_per_year
+    future_value = principal * (1 + rate_per_period) ** total_periods
+    return future_value",0,clean,"Calculates the future value of an investment based on principal, annual interest rate, years, and compounding frequency."
+"def calculate_euclidean_distance_2d(point1: tuple[float, float], point2: tuple[float, float]) -> float:
+    """"""
+    Computes the Euclidean distance between two points (x1, y1) and (x2, y2) in 2D space.
+    """"""
+    if not isinstance(point1, tuple) or len(point1) != 2 or not all(isinstance(c, (int, float)) for c in point1):
+        raise TypeError(""Point1 must be a tuple of two numbers."")
+    if not isinstance(point2, tuple) or len(point2) != 2 or not all(isinstance(c, (int, float)) for c in point2):
+        raise TypeError(""Point2 must be a tuple of two numbers."")
+
+    x1, y1 = point1
+    x2, y2 = point2
+
+    delta_x = x2 - x1
+    delta_y = y2 - y1
+
+    distance_squared = delta_x**2 + delta_y**2
+    distance = distance_squared ** 0.5
+    return distance",0,clean,Computes the Euclidean distance between two 2D points given as tuples of coordinates.
+"def evaluate_quadratic_polynomial(a: float, b: float, c: float, x: float) -> float:
+    """"""
+    Evaluates a quadratic polynomial ax^2 + bx + c for a given x.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [a, b, c, x]):
+        raise TypeError(""All coefficients and x must be numbers."")
+
+    result = a * (x ** 2) + b * x + c
+    return result",0,clean,Evaluates a quadratic polynomial (ax^2 + bx + c) for specific coefficients and a given variable 'x'.
+"def celsius_to_fahrenheit(celsius: float) -> float:
+    """"""
+    Converts a temperature from Celsius to Fahrenheit using the formula: F = C * 9/5 + 32.
+    """"""
+    if not isinstance(celsius, (int, float)):
+        raise TypeError(""Celsius temperature must be a number."")
+
+    fahrenheit = (celsius * 9 / 5) + 32
+    return fahrenheit",0,clean,Converts a temperature value from Celsius to Fahrenheit.
+"def calculate_net_income(gross_income: float, tax_rate_percent: float) -> float:
+    """"""
+    Calculates net income by subtracting a percentage tax from gross income.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [gross_income, tax_rate_percent]):
+        raise TypeError(""Gross income and tax rate must be numbers."")
+    if gross_income < 0:
+        raise ValueError(""Gross income cannot be negative."")
+    if not (0 <= tax_rate_percent <= 100):
+        raise ValueError(""Tax rate must be between 0 and 100 percent."")
+
+    tax_amount = gross_income * (tax_rate_percent / 100.0)
+    net_income = gross_income - tax_amount
+    return net_income",0,clean,Calculates the net income by applying a percentage tax rate to a given gross income.
+"def calculate_average(numbers: list[float]) -> float:
+    """"""
+    Calculates the arithmetic average of a list of numbers.
+    Returns 0.0 for an empty list to avoid ZeroDivisionError.
+    """"""
+    if not isinstance(numbers, list) or not all(isinstance(n, (int, float)) for n in numbers):
+        raise TypeError(""Numbers must be a list of numbers."")
+
+    if not numbers: 
+        return 0.0
+
+    total_sum = sum(numbers)
+    average = total_sum / len(numbers)
+    return average",0,clean,"Calculates the arithmetic average of a list of numbers, returning 0.0 for an empty list."
+"def scale_value(value: float, original_min: float, original_max: float, target_min: float, target_max: float) -> float:
+    """"""
+    Scales a value from an original range to a new target range.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [value, original_min, original_max, target_min, target_max]):
+        raise TypeError(""All input arguments must be numbers."")
+    if original_min > original_max:
+        raise ValueError(""Original minimum cannot be greater than original maximum."")
+    if target_min > target_max:
+        raise ValueError(""Target minimum cannot be greater than target maximum."")
+
+    original_range_span = original_max - original_min
+    if original_range_span == 0:
+        if value == original_min:
+            return target_min
+        else:
+            raise ValueError(""Value is outside the zero-span original range."")
+
+    scaled_value = ((value - original_min) / original_range_span) * (target_max - target_min) + target_min
+    return scaled_value",0,clean,"Scales a given value from an original numerical range to a target numerical range, handling zero-span original ranges safely."
+"def calculate_percentage(part: float, whole: float) -> float:
+    """"""
+    Calculates the percentage of a part relative to a whole.
+    Raises ZeroDivisionError if 'whole' is zero.
+    """"""
+    if not all(isinstance(arg, (int, float)) for arg in [part, whole]):
+        raise TypeError(""Part and whole must be numbers."")
+    if part < 0 or whole < 0:
+        raise ValueError(""Part and whole values must be non-negative for percentage calculation."")
+
+    percentage = (part / whole) * 100.0
+    return percentage",0,clean,"Calculates the percentage of a 'part' value relative to a 'whole' value, raising ZeroDivisionError if 'whole' is zero."
+"def get_user_by_id(user_id_str):
+    """"""
+    Retrieves user details by ID, performing integer validation on the path parameter and returning a user dictionary or error.
+    """"""
+    try:
+        user_id = int(user_id_str)
+        if user_id <= 0:
+            return {""error"": ""Invalid user ID."", ""status"": 400}
+    except ValueError:
+        return {""error"": ""User ID must be an integer."", ""status"": 400}
+
+    # Simulate database lookup for a secure user
+    users_db = {
+        101: {""id"": 101, ""name"": ""Alice Smith"", ""email"": ""alice@example.com""},
+        102: {""id"": 102, ""name"": ""Bob Johnson"", ""email"": ""bob@example.com""}
+    }
+    
+    user = users_db.get(user_id)
+    if user:
+        return {""data"": user, ""status"": 200}
+    else:
+        return {""error"": ""User not found."", ""status"": 404}",0,clean,"Retrieves user details by ID, performing integer validation on the path parameter and returning a user dictionary or error."
+"def create_product(product_data):
+    """"""
+    Creates a new product, validating required fields and types from a JSON-like dict.
+    """"""
+    if not isinstance(product_data, dict):
+        return {""error"": ""Request body must be a JSON object."", ""status"": 400}
+
+    required_fields = [""name"", ""price""]
+    for field in required_fields:
+        if field not in product_data:
+            return {""error"": f""Missing field: '{field}'."", ""status"": 400}
+
+    # Basic type and value validation
+    if not isinstance(product_data[""name""], str) or not product_data[""name""].strip():
+        return {""error"": ""Name must be a non-empty string."", ""status"": 400}
+    if not isinstance(product_data[""price""], (int, float)) or product_data[""price""] <= 0:
+        return {""error"": ""Price must be a positive number."", ""status"": 400}
+    
+    # Optional field
+    description = product_data.get(""description"", """").strip()
+    
+    # Simulate saving to DB and returning new product info
+    new_product_id = 1001 # Generated by DB
+    return {
+        ""data"": {
+            ""id"": new_product_id,
+            ""name"": product_data[""name""].strip(),
+            ""price"": product_data[""price""],
+            ""description"": description
+        },
+        ""status"": 201
+    }",0,clean,"Creates a new product, validating required fields, their types, and sanitizing string inputs from the JSON body."
+"def search_items(query_param):
+    """"""
+    Searches for items using a query string, sanitizing it to prevent basic injection.
+    """"""
+    if not isinstance(query_param, str) or not query_param.strip():
+        return {""error"": ""Search query cannot be empty."", ""status"": 400}
+
+    # Simulate a very basic 'SQL-like' escape to protect against simple injection if used in a raw string query
+    # In a real app, prepared statements are used, but this demonstrates input sanitization.
+    sanitized_query = query_param.strip().replace(""'"", ""''"").replace(""%"", ""\\%"").replace(""_"", ""\\_"")
+    
+    # Simulate a search operation with sanitized query
+    matching_items = []
+    if ""example"" in sanitized_query.lower():
+        matching_items.append({""id"": 201, ""name"": ""Example Item A""})
+    if ""test"" in sanitized_query.lower():
+        matching_items.append({""id"": 202, ""name"": ""Test Product B""})
+
+    if matching_items:
+        return {""data"": matching_items, ""count"": len(matching_items), ""status"": 200}
+    else:
+        return {""data"": [], ""count"": 0, ""message"": ""No items found."", ""status"": 200}",0,clean,"Searches for items using a query string, sanitizing it with a basic SQL-like escape to prevent simple injection."
+"def update_order_status(order_id_str, update_data, current_user_id):
+    """"""
+    Updates an order's status, validating inputs and simulating an authorization check.
+    """"""
+    try:
+        order_id = int(order_id_str)
+        if order_id <= 0:
+            return {""error"": ""Invalid order ID."", ""status"": 400}
+    except ValueError:
+        return {""error"": ""Order ID must be an integer."", ""status"": 400}
+
+    if not isinstance(update_data, dict) or ""status"" not in update_data:
+        return {""error"": ""Request body must specify 'status'."", ""status"": 400}
+
+    new_status = update_data[""status""]
+    if not isinstance(new_status, str) or new_status not in [""pending"", ""shipped"", ""delivered"", ""cancelled""]:
+        return {""error"": ""Invalid status value."", ""status"": 400}
+    
+    # Simulate authorization: Only user 101 can update order 501
+    if order_id == 501 and current_user_id != 101:
+        return {""error"": ""Unauthorized to update this order."", ""status"": 403}
+
+    # Simulate database update
+    return {""message"": f""Order {order_id} status updated to {new_status}."", ""status"": 200}",0,clean,"Updates an order's status, validating path and body parameters, and including a conceptual authorization check."
+"def delete_item(item_id_str, user_roles):
+    """"""
+    Deletes an item by ID, validating the ID and checking user permissions.
+    """"""
+    try:
+        item_id = int(item_id_str)
+        if item_id <= 0:
+            return {""error"": ""Invalid item ID."", ""status"": 400}
+    except ValueError:
+        return {""error"": ""Item ID must be an integer."", ""status"": 400}
+
+    # Simulate authorization: Only users with 'admin' role can delete
+    if ""admin"" not in user_roles:
+        return {""error"": ""Forbidden: Requires 'admin' role."", ""status"": 403}
+
+    # Simulate checking if item exists
+    if item_id not in [10, 20, 30]: # Example existing items
+        return {""error"": ""Item not found."", ""status"": 404}
+
+    # Simulate database deletion (no actual DB call, just a placeholder)
+    return {""message"": f""Item {item_id} deleted successfully."", ""status"": 204}",0,clean,"Deletes an item by ID, validating the ID and enforcing an 'admin' role authorization check."
+"def get_application_configuration(is_admin_request):
+    """"""
+    Retrieves application configuration, hiding sensitive details from non-admin users.
+    """"""
+    full_config = {
+        ""app_name"": ""SecureApp"",
+        ""version"": ""1.0.0"",
+        ""database_url"": ""mysql://user:password@host/db"", # Sensitive
+        ""api_key"": ""supersecretkey123"", # Sensitive
+        ""log_level"": ""INFO"",
+        ""feature_flags"": {""new_ui"": True, ""beta_mode"": False}
+    }
+
+    if is_admin_request:
+        return {""data"": full_config, ""status"": 200}
+    else:
+        # Filter out sensitive information for non-admin users
+        public_config = {
+            k: v for k, v in full_config.items()
+            if k not in [""database_url"", ""api_key""]
+        }
+        return {""data"": public_config, ""status"": 200}",0,clean,"Retrieves application configuration, selectively hiding sensitive details from non-admin requests."
+"def handle_login(credentials):
+    """"""
+    Handles a login attempt, validating username and password format.
+    """"""
+    if not isinstance(credentials, dict):
+        return {""error"": ""Request body must be a JSON object."", ""status"": 400}
+    
+    username = credentials.get(""username"")
+    password = credentials.get(""password"")
+
+    if not isinstance(username, str) or not username.strip():
+        return {""error"": ""Username is required."", ""status"": 400}
+    if not isinstance(password, str) or not password.strip():
+        return {""error"": ""Password is required."", ""status"": 400}
+
+    # Basic length check for security (e.g., brute force protection)
+    if len(username) < 3 or len(username) > 50:
+        return {""error"": ""Username length invalid."", ""status"": 400}
+    if len(password) < 8 or len(password) > 100:
+        return {""error"": ""Password length invalid."", ""status"": 400}
+
+    # In a real app, username/password would be hashed and compared securely.
+    # Here we just acknowledge valid format.
+    clean_username = username.strip() # Sanitize before further use (e.g., logging)
+    
+    # Simulate success (not actual authentication)
+    return {""message"": f""Login attempt for user '{clean_username}' processed."", ""status"": 200}",0,clean,"Processes a login attempt, validating the format and length of username and password inputs for security."
+"def _html_escape(text):
+    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('""', '&quot;').replace(""'"", '&#x27;')
+
+def get_all_messages(user_id):
+    """"""
+    Retrieves a list of messages for a user, ensuring message content is HTML-escaped.
+    """"""
+    # Simulate fetching messages from a database
+    raw_messages = [
+        {""id"": 1, ""sender"": ""Admin"", ""content"": ""Welcome to our site! Click <a href='/help'>here</a>.""},
+        {""id"": 2, ""sender"": ""UserX"", ""content"": ""Hello & goodbye <script>alert('xss');</script>""},
+        {""id"": 3, ""sender"": ""System"", ""content"": ""Your payment is due.""}
+    ]
+
+    escaped_messages = []
+    for msg in raw_messages:
+        # Ensure that content is HTML-escaped for safe display in a web browser
+        escaped_messages.append({
+            ""id"": msg[""id""],
+            ""sender"": _html_escape(msg[""sender""]),
+            ""content"": _html_escape(msg[""content""])
+        })
+    
+    return {""data"": escaped_messages, ""count"": len(escaped_messages), ""status"": 200}",0,clean,"Retrieves a list of messages for a user, ensuring all message content is HTML-escaped before output."
+"def _html_escape(text):
+    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('""', '&quot;').replace(""'"", '&#x27;')
+
+def post_new_comment(comment_data, author_id):
+    """"""
+    Receives a new comment, sanitizes its content for HTML safety, and 'stores' it.
+    """"""
+    if not isinstance(comment_data, dict) or ""content"" not in comment_data:
+        return {""error"": ""Comment content is required."", ""status"": 400}
+    
+    raw_content = comment_data[""content""]
+    if not isinstance(raw_content, str) or not raw_content.strip():
+        return {""error"": ""Comment content cannot be empty."", ""status"": 400}
+
+    # Sanitize content before processing/storing to prevent XSS on display
+    sanitized_content = _html_escape(raw_content.strip())
+
+    # Simulate saving to database and returning the clean comment
+    new_comment_id = 901
+    return {
+        ""data"": {
+            ""id"": new_comment_id,
+            ""author_id"": author_id,
+            ""content"": sanitized_content,
+            ""timestamp"": ""2023-10-27T10:00:00Z"" # Simulated
+        },
+        ""message"": ""Comment posted successfully."",
+        ""status"": 201
+    }",0,clean,"Receives a new comment, sanitizes its user-provided content using HTML escaping to prevent XSS, and 'stores' it."
+"def get_health_status():
+    """"""
+    Provides a simple health check status for the service.
+    """"""
+    # In a real application, this might check database connections,
+    # external services, etc. For this example, it's always healthy.
+    
+    status_info = {
+        ""status"": ""healthy"",
+        ""service_name"": ""API Gateway"",
+        ""version"": ""1.0.0"",
+        ""timestamp"": ""2023-10-27T10:00:00Z"" # Simulated
+    }
+    
+    # All values are hardcoded or derived from internal sources,
+    # ensuring no user input or sensitive data is directly output.
+    return {""data"": status_info, ""status"": 200}",0,clean,"Provides a simple health check, returning a hardcoded status to ensure no sensitive information leakage."
+"def check_user_login(username, password):
+    """"""
+    Simulates checking user credentials against a database.
+    Directly concatenates username and password into the SQL query,
+    making it vulnerable to SQL injection.
+    """"""
+    sql_query = ""SELECT user_id FROM users WHERE username = '"" + username + ""' AND password = '"" + password + ""'""
+    # In a real application, db_execute would run this query
+    # e.g., result = db_execute(sql_query)
+    # return result
+    return sql_query # Returning query for demonstration",1,sql_injection,"A function that checks user login credentials by concatenating the username and password directly into a SELECT statement, making it vulnerable to SQL injection."
+"def get_product_details(product_id):
+    """"""
+    Fetches product details based on a product ID.
+    Concatenates the product_id directly into the SQL query,
+    allowing for SQL injection, even if product_id is expected to be numeric.
+    """"""
+    # Assuming product_id might be passed as a string from web input
+    sql_query = ""SELECT name, description, price FROM products WHERE id = "" + product_id
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that retrieves product details using a product ID, concatenating the ID directly into the SQL query without sanitization, leading to SQL injection."
+"def update_user_email(user_id, new_email):
+    """"""
+    Updates a user's email address in the database.
+    Directly concatenates user_id and new_email into the UPDATE statement,
+    creating an SQL injection vulnerability.
+    """"""
+    sql_query = ""UPDATE users SET email = '"" + new_email + ""' WHERE user_id = "" + str(user_id)
+    # db_execute(sql_query)
+    # return ""Email updated successfully (simulated)""
+    return sql_query",1,sql_injection,"A function that updates a user's email by directly embedding user-provided `user_id` and `new_email` into an UPDATE statement, making it vulnerable to SQL injection."
+"def add_new_comment(post_id, author_name, comment_content):
+    """"""
+    Adds a new comment to a post.
+    Concatenates post_id, author_name, and comment_content directly into an INSERT statement,
+    making it susceptible to SQL injection.
+    """"""
+    sql_query = (
+        ""INSERT INTO comments (post_id, author, content) VALUES (""
+        + str(post_id) + "", '"" + author_name + ""', '"" + comment_content + ""')""
+    )
+    # db_execute(sql_query)
+    # return ""Comment added (simulated)""
+    return sql_query",1,sql_injection,"A function that inserts a new comment by directly concatenating `post_id`, `author_name`, and `comment_content` into an INSERT statement, creating an SQL injection vulnerability."
+"def remove_cart_item(user_id, item_id):
+    """"""
+    Removes an item from a user's shopping cart.
+    Directly concatenates user_id and item_id into the DELETE statement's WHERE clause,
+    exposing it to SQL injection.
+    """"""
+    sql_query = ""DELETE FROM shopping_cart WHERE user_id = "" + str(user_id) + "" AND item_id = "" + str(item_id)
+    # db_execute(sql_query)
+    # return ""Item removed from cart (simulated)""
+    return sql_query",1,sql_injection,"A function that deletes an item from a shopping cart by directly concatenating `user_id` and `item_id` into the DELETE statement's WHERE clause, making it vulnerable to SQL injection."
+"def get_sorted_products(sort_column):
+    """"""
+    Retrieves a list of products sorted by a specified column.
+    Directly uses the user-provided sort_column in the ORDER BY clause,
+    which is a common SQL injection vector.
+    """"""
+    # Example: sort_column = ""name DESC"" or ""price""
+    sql_query = ""SELECT id, name, price FROM products ORDER BY "" + sort_column
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that retrieves products sorted by a column name provided directly by the user, making the ORDER BY clause vulnerable to SQL injection."
+"def get_paginated_articles(limit, offset):
+    """"""
+    Fetches articles with pagination based on limit and offset parameters.
+    Concatenates the limit and offset values directly into the SQL query,
+    leading to SQL injection vulnerability.
+    """"""
+    # Assuming limit and offset are integers but come as strings from input
+    sql_query = ""SELECT id, title, published_date FROM articles LIMIT "" + str(limit) + "" OFFSET "" + str(offset)
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that fetches paginated articles by directly concatenating user-provided `limit` and `offset` values into the SQL LIMIT and OFFSET clauses, creating an SQL injection vulnerability."
+"def search_products_by_keyword(search_term):
+    """"""
+    Searches for products based on a keyword using a LIKE clause.
+    Directly embeds the search_term into the SQL query, making it vulnerable to SQL injection.
+    """"""
+    # Example: search_term = ""laptop""
+    sql_query = ""SELECT name, description, price FROM products WHERE name LIKE '%"" + search_term + ""%'""
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that searches for products by directly embedding a user-provided `search_term` into a SQL LIKE clause, making it vulnerable to SQL injection."
+"def filter_orders(customer_id, order_status):
+    """"""
+    Filters orders based on customer ID and order status.
+    Concatenates both customer_id and order_status directly into the WHERE clause,
+    creating multiple points of SQL injection vulnerability.
+    """"""
+    sql_query = (
+        ""SELECT order_id, total_amount, order_date FROM orders WHERE ""
+        ""customer_id = "" + str(customer_id) + "" AND status = '"" + order_status + ""'""
+    )
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that filters orders by directly concatenating both `customer_id` and `order_status` into the SQL WHERE clause, creating an SQL injection vulnerability."
+"def get_inventory_filtered(filter_clause_fragment):
+    """"""
+    Retrieves inventory items using a dynamic WHERE clause fragment provided by the user.
+    Directly concatenates the entire filter_clause_fragment into the SQL query,
+    making it extremely vulnerable to arbitrary SQL injection.
+    """"""
+    # Example: filter_clause_fragment = ""category='Electronics' AND stock_quantity > 50""
+    sql_query = ""SELECT item_id, name, stock_quantity FROM inventory WHERE "" + filter_clause_fragment
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that retrieves inventory items by directly concatenating an arbitrary user-provided WHERE clause fragment into the SQL query, leading to severe SQL injection vulnerability."
+"def get_user_profile(username: str):
+    """"""
+    Retrieves a user's profile information by username.
+    Vulnerable to SQL injection via the username parameter.
+    """"""
+    sql_query = f""SELECT user_id, email, full_name FROM users WHERE username = '{username}'""
+    # In a real app, this would be db_connection.execute(sql_query)
+    # For this exercise, we just simulate the query construction.
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Retrieves user profile details based on a username, vulnerable to SQL injection in the WHERE clause using an f-string."
+"def get_product_details(product_id: int):
+    """"""
+    Fetches product details by its ID.
+    Vulnerable to SQL injection if product_id is not strictly validated
+    as an integer and single quotes are later added implicitly or explicitly
+    in the database layer, or if an attacker injects a string to break out.
+    """"""
+    sql_query = ""SELECT product_name, description, price FROM products WHERE product_id = {}"".format(product_id)
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Fetches product details by ID, vulnerable to SQL injection in the WHERE clause if the numeric ID can be manipulated using the .format() method."
+"def create_new_log_entry(message: str, user_id: int):
+    """"""
+    Inserts a new log entry into the database.
+    Vulnerable to SQL injection via the message parameter.
+    """"""
+    # Note: user_id is integer, but message needs quotes
+    sql_query = f""INSERT INTO logs (message, user_id, timestamp) VALUES ('{message}', {user_id}, NOW())""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Inserts a new log entry with a user-provided message and user ID, vulnerable to SQL injection in the message parameter using an f-string."
+"def update_user_setting(user_id: int, setting_key: str, new_value: str):
+    """"""
+    Updates a specific setting for a user.
+    Vulnerable to SQL injection via new_value and setting_key parameters.
+    """"""
+    sql_query = f""UPDATE user_settings SET setting_value = '{new_value}' WHERE user_id = {user_id} AND setting_name = '{setting_key}'""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Updates a user's specific setting, vulnerable to SQL injection through both the new setting value and the setting key parameters using an f-string."
+"def delete_document_by_name(document_name: str, owner_id: int):
+    """"""
+    Deletes a document by its name for a specific owner.
+    Vulnerable to SQL injection via the document_name parameter.
+    """"""
+    sql_query = f""DELETE FROM documents WHERE document_name = '{document_name}' AND owner_id = {owner_id}""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Deletes a document by name for a given owner, vulnerable to SQL injection in the document name parameter using an f-string."
+"def get_sorted_items(item_type: str, sort_column: str, sort_order: str = 'ASC'):
+    """"""
+    Retrieves a list of items of a given type, sorted by a specified column and order.
+    Vulnerable to SQL injection via sort_column and sort_order parameters.
+    """"""
+    if sort_order.upper() not in ['ASC', 'DESC']:
+        sort_order = 'ASC'
+    
+    sql_query = f""SELECT id, name, description FROM items WHERE type = '{item_type}' ORDER BY {sort_column} {sort_order}""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Retrieves sorted items by type, vulnerable to SQL injection in the ORDER BY clause via the sort_column and sort_order parameters using an f-string."
+"def search_products_by_keyword(keyword: str):
+    """"""
+    Searches for products whose names contain a specific keyword.
+    Vulnerable to SQL injection via the keyword parameter.
+    """"""
+    sql_query = f""SELECT product_id, product_name, price FROM products WHERE product_name LIKE '%{keyword}%'""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Searches for products by a keyword using a LIKE clause, vulnerable to SQL injection in the keyword parameter using an f-string."
+"def get_paginated_comments(post_id: int, page_size: int, page_num: int):
+    """"""
+    Fetches comments for a post with pagination.
+    Vulnerable to SQL injection if page_size or page_num are manipulated to
+    inject malicious SQL within or after the numeric context.
+    """"""
+    offset_val = (page_num - 1) * page_size
+    limit_val = page_size
+    
+    sql_query = f""SELECT comment_id, author_id, comment_text FROM comments WHERE post_id = {post_id} LIMIT {limit_val} OFFSET {offset_val}""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Fetches paginated comments for a post, vulnerable to SQL injection if pagination parameters like `page_size` or `page_num` are manipulated using an f-string."
+"def check_role_exists(role_name: str):
+    """"""
+    Checks if a given role name exists in the roles table.
+    Vulnerable to SQL injection via the role_name parameter.
+    """"""
+    sql_query = f""SELECT 1 FROM roles WHERE role_name = '{role_name}' LIMIT 1""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Checks for the existence of a role by name, vulnerable to SQL injection in the role name parameter using an f-string."
+"def get_data_from_dynamic_table(table_name: str, record_id: int):
+    """"""
+    Retrieves data from a dynamically specified table by record ID.
+    Extremely vulnerable to SQL injection via the table_name parameter.
+    """"""
+    sql_query = f""SELECT * FROM {table_name} WHERE id = {record_id}""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Retrieves data from a dynamically specified table based on an ID, extremely vulnerable to SQL injection in the table name parameter using an f-string."
+"def get_user_profile_fstring(username: str):
+    """"""
+    Retrieves a user's profile information using an f-string for the WHERE clause.
+    """"""
+    query = f""SELECT id, name, email FROM users WHERE username = '{username}'""
+    print(f""Executing query: {query}"")
+    # In a real app, this would execute the query against a database
+    return {""id"": 1, ""name"": ""Test User"", ""email"": ""test@example.com""} # Mock result",1,sql_injection,"Retrieves a user's profile using an f-string to build a SELECT query, vulnerable to SQL injection through the `username` parameter."
+"def find_product_details_format(product_id: str):
+    """"""
+    Fetches product details using .format() for the WHERE clause.
+    """"""
+    query = ""SELECT product_name, description, price FROM products WHERE product_id = '{}'"".format(product_id)
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    return {""product_name"": ""Gadget X"", ""description"": ""A cool gadget."", ""price"": 99.99} # Mock result",1,sql_injection,"Fetches product details using `.format()` to build a SELECT query, vulnerable to SQL injection through the `product_id` parameter."
+"def update_user_email_fstring(user_id: int, new_email: str):
+    """"""
+    Updates a user's email address using an f-string for the SET clause.
+    """"""
+    query = f""UPDATE users SET email = '{new_email}' WHERE id = {user_id}""
+    print(f""Executing query: {query}"")
+    # Simulate DB update
+    return True # Mock result",1,sql_injection,"Updates a user's email using an f-string to build an UPDATE query, vulnerable to SQL injection through the `new_email` parameter."
+"def delete_order_by_id_format(order_uuid: str):
+    """"""
+    Deletes an order by its UUID using .format() for the WHERE clause.
+    """"""
+    query = ""DELETE FROM orders WHERE uuid = '{}'"".format(order_uuid)
+    print(f""Executing query: {query}"")
+    # Simulate DB delete
+    return True # Mock result",1,sql_injection,"Deletes an order using `.format()` to build a DELETE query, vulnerable to SQL injection through the `order_uuid` parameter."
+"def get_articles_sorted_fstring(sort_column: str, limit: int = 10):
+    """"""
+    Retrieves articles sorted by a dynamic column using an f-string for the ORDER BY clause.
+    """"""
+    # Bad practice: allowing sort_column to be directly injected without validation
+    query = f""SELECT id, title, author FROM articles ORDER BY {sort_column} LIMIT {limit}""
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    return [{""id"": 1, ""title"": ""Article A"", ""author"": ""John Doe""}] # Mock result",1,sql_injection,"Retrieves articles with an f-string dynamically constructing the ORDER BY clause, vulnerable to SQL injection through the `sort_column` parameter."
+"def add_log_entry_fstring(message: str, level: int):
+    """"""
+    Adds a log entry to a table using an f-string for the VALUES clause.
+    """"""
+    # Assuming 'message' should be quoted, and 'level' is an integer.
+    # Injection in 'message' is direct due to missing escape.
+    query = f""INSERT INTO logs (timestamp, message, level) VALUES (NOW(), '{message}', {level})""
+    print(f""Executing query: {query}"")
+    # Simulate DB insert
+    return True # Mock result",1,sql_injection,"Adds a log entry using an f-string to build an INSERT query, vulnerable to SQL injection through the `message` parameter."
+"def search_invoices_format(customer_name: str, min_amount: float):
+    """"""
+    Searches invoices by customer name and minimum amount using .format() for multiple WHERE conditions.
+    """"""
+    # Note: min_amount is float, but if it comes from user input as string, it's dangerous if not converted/validated
+    # customer_name is string and quoted, making it vulnerable.
+    query = ""SELECT invoice_id, amount, date FROM invoices WHERE customer_name = '{0}' AND amount > {1}"".format(customer_name, min_amount)
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    return [{""invoice_id"": ""INV001"", ""amount"": 150.75, ""date"": ""2023-01-15""}] # Mock result",1,sql_injection,"Searches invoices using `.format()` to build a SELECT query with multiple WHERE conditions, vulnerable to SQL injection through the `customer_name` parameter."
+"def get_users_by_id_list_fstring(user_ids: list[str]):
+    """"""
+    Retrieves multiple users by a list of string IDs, building an IN clause with an f-string.
+    """"""
+    # This is dangerous if user_ids contains unvalidated strings, e.g., [""1"", ""2 OR 1=1""]
+    id_list_str = "", "".join(user_ids) 
+    query = f""SELECT id, username FROM users WHERE id IN ({id_list_str})""
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    return [{""id"": 1, ""username"": ""user1""}] # Mock result",1,sql_injection,"Retrieves users based on a list of string IDs, building an IN clause with an f-string, vulnerable to SQL injection if elements in `user_ids` are not properly validated before joining."
+"def authenticate_admin_format(username: str, password: str):
+    """"""
+    Authenticates an admin user using .format() to build a WHERE clause for credentials.
+    """"""
+    # Classic login bypass scenario
+    query = ""SELECT id FROM admins WHERE username = '{0}' AND password = '{1}'"".format(username, password)
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    # In a real scenario, this would return a user ID if authenticated, or None
+    if username == ""admin"" and password == ""securepass"":
+        return 1
+    return None # Mock result",1,sql_injection,"Authenticates an admin user using `.format()` to build a SELECT query for credentials, highly vulnerable to SQL injection through `username` and `password` parameters for login bypass."
+"def get_data_from_dynamic_table_fstring(table_name: str, record_id: int):
+    """"""
+    Retrieves data from a dynamically specified table using an f-string.
+    """"""
+    # Extremely dangerous if table_name comes from untrusted input
+    query = f""SELECT * FROM {table_name} WHERE id = {record_id}""
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    return {""id"": record_id, ""data"": ""some data""} # Mock result",1,sql_injection,"Retrieves data from a dynamically specified table using an f-string to embed the table name, extremely vulnerable to SQL injection through the `table_name` parameter."
+"def get_user_profile(username):
+    """"""
+    Fetches a user's profile details based on username.
+    Vulnerable to SQL injection via the username parameter.
+    """"""
+    query = ""SELECT id, email, created_at FROM users WHERE username = '%s'"" % username
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Profile data for: {username} (simulated)""",1,sql_injection,"This function fetches user profile details, vulnerable to SQL injection because it directly interpolates the username into a SELECT query using %s."
+"def search_products(search_term):
+    """"""
+    Searches for products by a given search term using LIKE.
+    Vulnerable to SQL injection via the search_term parameter.
+    """"""
+    query = ""SELECT name, price FROM products WHERE description LIKE '%%%s%%'"" % search_term
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Search results for: {search_term} (simulated)""",1,sql_injection,"This function searches products using a LIKE clause, vulnerable to SQL injection because it directly interpolates the search term into a SELECT query using %s."
+"def update_user_email(user_id, new_email):
+    """"""
+    Updates a user's email address by user ID.
+    Vulnerable to SQL injection via both user_id and new_email parameters.
+    """"""
+    query = ""UPDATE users SET email = '%s' WHERE id = %s"" % (new_email, user_id)
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query)
+    return f""Updated email for user {user_id} to {new_email} (simulated)""",1,sql_injection,"This function updates a user's email, vulnerable to SQL injection because it directly interpolates both the new email and user ID into an UPDATE query using %s."
+"def delete_item_by_id(item_id):
+    """"""
+    Deletes an item from the inventory by its ID.
+    Vulnerable to SQL injection via the item_id parameter.
+    """"""
+    query = ""DELETE FROM inventory WHERE item_id = %s"" % item_id
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query)
+    return f""Attempted to delete item with ID: {item_id} (simulated)""",1,sql_injection,"This function deletes an item, vulnerable to SQL injection because it directly interpolates the item ID into a DELETE query using %s."
+"def create_new_account(username, password):
+    """"""
+    Creates a new user account with provided username and password.
+    Vulnerable to SQL injection via both username and password parameters.
+    """"""
+    query = ""INSERT INTO accounts (username, password) VALUES ('%s', '%s')"" % (username, password)
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query)
+    return f""Account created for username: {username} (simulated)""",1,sql_injection,"This function creates a new account, vulnerable to SQL injection because it directly interpolates the username and password into an INSERT query using %s."
+"def get_items_ordered_by(column_name):
+    """"""
+    Retrieves all items, ordered by a specified column.
+    Vulnerable to SQL injection via the column_name parameter.
+    """"""
+    query = ""SELECT id, name, price FROM items ORDER BY %s"" % column_name
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Items ordered by {column_name} (simulated)""",1,sql_injection,"This function fetches items ordered by a specified column, vulnerable to SQL injection because it directly interpolates the column name into an ORDER BY clause using %s."
+"def login_user(username, password):
+    """"""
+    Authenticates a user by checking their username and password.
+    Vulnerable to SQL injection via both username and password parameters.
+    """"""
+    query = ""SELECT id FROM users WHERE username = '%s' AND password = '%s'"" % (username, password)
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Login attempt for: {username} (simulated)""",1,sql_injection,"This function authenticates a user, vulnerable to SQL injection because it directly interpolates the username and password into a SELECT query's WHERE clause using %s."
+"def get_config_value(config_key):
+    """"""
+    Fetches a configuration value by its key.
+    Vulnerable to SQL injection via the config_key parameter.
+    """"""
+    query = ""SELECT value FROM configurations WHERE config_key = '%s'"" % config_key
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Config value for {config_key} (simulated)""",1,sql_injection,"This function retrieves a configuration value, vulnerable to SQL injection because it directly interpolates the configuration key into a SELECT query using %s."
+"def update_product_price(product_id, new_price):
+    """"""
+    Updates the price of a specific product.
+    Vulnerable to SQL injection via the product_id and new_price parameters.
+    """"""
+    # Although new_price might be expected as numeric, string interpolation makes it vulnerable
+    query = ""UPDATE products SET price = %s WHERE id = %s"" % (new_price, product_id)
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query)
+    return f""Updated price for product {product_id} to {new_price} (simulated)""",1,sql_injection,"This function updates a product's price, vulnerable to SQL injection because it directly interpolates the product ID and new price into an UPDATE query using %s, even if price is expected to be numeric."
+"def list_events_by_date(event_date):
+    """"""
+    Lists events scheduled for a specific date.
+    Vulnerable to SQL injection via the event_date parameter.
+    """"""
+    query = ""SELECT * FROM events WHERE event_date = '%s'"" % event_date
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Events on {event_date} (simulated)""",1,sql_injection,"This function lists events by date, vulnerable to SQL injection because it directly interpolates the event date into a SELECT query's WHERE clause using %s."

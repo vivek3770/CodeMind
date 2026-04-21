@@ -1,0 +1,300 @@
+code,label,bug_class,description
+"def check_username_availability(conn, username):
+    """"""
+    Checks if a username already exists in the database using a parameterized query.
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""SELECT 1 FROM users WHERE username = ?""
+            cursor.execute(sql, (username,))
+            result = cursor.fetchone()
+            return result is not None # True if a row was found, False otherwise
+    except Exception as e:
+        # In a real application, log the exception
+        return False # Assume unavailable or error occurred",0,clean,"Checks if a given username already exists in the `users` table, returning a boolean indicating availability, using a secure parameterized query."
+"def search_articles_by_title(search_term: str):
+    """"""Searches for articles whose titles match a given search term using a parameterized LIKE query.""""""
+    query = ""SELECT article_id, title, author FROM articles WHERE title LIKE ?""
+    parameters = (f""%{search_term}%"",)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated search results for articles with title like '%{search_term}%'""",0,clean,"This function searches for articles by title using a parameterized LIKE clause, ensuring the wildcard is part of the parameter for security."
+"def search_invoices_format(customer_name: str, min_amount: float):
+    """"""
+    Searches invoices by customer name and minimum amount using .format() for multiple WHERE conditions.
+    """"""
+    # Note: min_amount is float, but if it comes from user input as string, it's dangerous if not converted/validated
+    # customer_name is string and quoted, making it vulnerable.
+    query = ""SELECT invoice_id, amount, date FROM invoices WHERE customer_name = '{0}' AND amount > {1}"".format(customer_name, min_amount)
+    print(f""Executing query: {query}"")
+    # Simulate DB query
+    return [{""invoice_id"": ""INV001"", ""amount"": 150.75, ""date"": ""2023-01-15""}] # Mock result",1,sql_injection,"Searches invoices using `.format()` to build a SELECT query with multiple WHERE conditions, vulnerable to SQL injection through the `customer_name` parameter."
+"def get_product_details(product_id):
+    """"""
+    Fetches product details based on a product ID.
+    Concatenates the product_id directly into the SQL query,
+    allowing for SQL injection, even if product_id is expected to be numeric.
+    """"""
+    # Assuming product_id might be passed as a string from web input
+    sql_query = ""SELECT name, description, price FROM products WHERE id = "" + product_id
+    # result = db_execute(sql_query)
+    # return result
+    return sql_query",1,sql_injection,"A function that retrieves product details using a product ID, concatenating the ID directly into the SQL query without sanitization, leading to SQL injection."
+"def delete_product_by_id(conn, product_id):
+    """"""
+    Deletes a product record from the 'products' table by its ID using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""DELETE FROM products WHERE id = ?""
+    try:
+        cursor.execute(query, (product_id,))
+        conn.commit()
+        return cursor.rowcount > 0 # Returns True if a record was deleted, False otherwise
+    except Exception as e:
+        conn.rollback()
+        # In a real app, log error more robustly
+        return False
+    finally:
+        cursor.close()",0,clean,"Deletes a product record by its ID, returning True if successful or False if no record was deleted or an error occurred."
+"def update_product_price(product_id, new_price):
+    """"""
+    Updates the price of a specific product.
+    Vulnerable to SQL injection via the product_id and new_price parameters.
+    """"""
+    # Although new_price might be expected as numeric, string interpolation makes it vulnerable
+    query = ""UPDATE products SET price = %s WHERE id = %s"" % (new_price, product_id)
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query)
+    return f""Updated price for product {product_id} to {new_price} (simulated)""",1,sql_injection,"This function updates a product's price, vulnerable to SQL injection because it directly interpolates the product ID and new price into an UPDATE query using %s, even if price is expected to be numeric."
+"def calculate_final_cost(item_prices: list[float], discount_percentage: float) -> float:
+    """"""
+    Calculates the total cost of multiple items after applying a percentage discount.
+    """"""
+    if not isinstance(item_prices, list) or not all(isinstance(p, (int, float)) for p in item_prices):
+        raise TypeError(""item_prices must be a list of numbers."")
+    if not isinstance(discount_percentage, (int, float)):
+        raise TypeError(""discount_percentage must be a number."")
+    if not (0 <= discount_percentage <= 100):
+        raise ValueError(""Discount percentage must be between 0 and 100."")
+
+    total_gross_cost = sum(item_prices)
+    discount_factor = (100 - discount_percentage) / 100.0
+    final_cost = total_gross_cost * discount_factor
+    return max(0.0, final_cost)",0,clean,"Calculates the final cost of a list of items after applying a percentage discount, ensuring the cost is not negative."
+"def get_sorted_items(item_type: str, sort_column: str, sort_order: str = 'ASC'):
+    """"""
+    Retrieves a list of items of a given type, sorted by a specified column and order.
+    Vulnerable to SQL injection via sort_column and sort_order parameters.
+    """"""
+    if sort_order.upper() not in ['ASC', 'DESC']:
+        sort_order = 'ASC'
+    
+    sql_query = f""SELECT id, name, description FROM items WHERE type = '{item_type}' ORDER BY {sort_column} {sort_order}""
+    # Assume execute_query is a global or passed-in function
+    return ""Query executed: "" + sql_query",1,sql_injection,"Retrieves sorted items by type, vulnerable to SQL injection in the ORDER BY clause via the sort_column and sort_order parameters using an f-string."
+"def calculate_discounted_price(original_price, discount_percentage):
+    """"""
+    Calculates the discounted price given an original price and a discount percentage.
+    Returns None if either input is None, not a valid number (int/float), or outside valid ranges.
+    """"""
+    if original_price is None or discount_percentage is None:
+        return None
+    
+    if not isinstance(original_price, (int, float)) or not isinstance(discount_percentage, (int, float)):
+        return None
+
+    if original_price < 0:
+        return None
+
+    if not (0 <= discount_percentage <= 100):
+        return None
+        
+    discount_factor = (100 - discount_percentage) / 100
+    return original_price * discount_factor",0,clean,"Computes a discounted price, returning None if the original price or discount percentage is None, not numeric, or outside valid ranges."
+"def calculate_robust_ratio(value_a: float, value_b: float, tolerance: float = 1e-9) -> float:
+    """"""
+    Calculates the ratio of value_a to value_b, handling cases where value_b is zero or near zero.
+    Returns 0.0 if value_b is within the specified tolerance of zero.
+    """"""
+    if abs(value_b) < tolerance:
+        return 0.0
+    return value_a / value_b",0,clean,"Calculates a ratio, returning 0.0 if the denominator is zero or negligibly close to zero using a tolerance."
+"def process_user_input(input_string):
+    """"""
+    Processes a user input string, returning a stripped and lowercased version,
+    or None if the input string itself is None or empty after stripping.
+    """"""
+    if input_string is None:
+        return None
+    
+    cleaned_string = str(input_string).strip().lower()
+    if not cleaned_string: # Also handles empty strings after stripping
+        return None
+    return cleaned_string",0,clean,"Processes a user input string by stripping whitespace and lowercasing it, returning None if the input is None or becomes empty after processing."
+"def delete_order_by_id_format(order_uuid: str):
+    """"""
+    Deletes an order by its UUID using .format() for the WHERE clause.
+    """"""
+    query = ""DELETE FROM orders WHERE uuid = '{}'"".format(order_uuid)
+    print(f""Executing query: {query}"")
+    # Simulate DB delete
+    return True # Mock result",1,sql_injection,"Deletes an order using `.format()` to build a DELETE query, vulnerable to SQL injection through the `order_uuid` parameter."
+"def calculate_percentage_change(old_value: float, new_value: float) -> float:
+    """"""
+    Calculates the percentage change from an old value to a new value.
+    Handles zero old_value by returning 0.0 if new_value is also zero,
+    otherwise returns float('inf') for positive change or float('-inf') for negative change.
+    """"""
+    if old_value == 0.0:
+        if new_value == 0.0:
+            return 0.0
+        else:
+            return float('inf') if new_value > 0 else float('-inf')
+            
+    return ((new_value - old_value) / old_value) * 100.0",0,clean,"Calculates the percentage change between two values, handling zero old_value scenarios by returning 0.0, float('inf'), or float('-inf')."
+"def add_log_entry_fstring(message: str, level: int):
+    """"""
+    Adds a log entry to a table using an f-string for the VALUES clause.
+    """"""
+    # Assuming 'message' should be quoted, and 'level' is an integer.
+    # Injection in 'message' is direct due to missing escape.
+    query = f""INSERT INTO logs (timestamp, message, level) VALUES (NOW(), '{message}', {level})""
+    print(f""Executing query: {query}"")
+    # Simulate DB insert
+    return True # Mock result",1,sql_injection,"Adds a log entry using an f-string to build an INSERT query, vulnerable to SQL injection through the `message` parameter."
+"def celsius_to_fahrenheit(celsius: float) -> float:
+    """"""
+    Converts a temperature from Celsius to Fahrenheit using the formula: F = C * 9/5 + 32.
+    """"""
+    if not isinstance(celsius, (int, float)):
+        raise TypeError(""Celsius temperature must be a number."")
+
+    fahrenheit = (celsius * 9 / 5) + 32
+    return fahrenheit",0,clean,Converts a temperature value from Celsius to Fahrenheit.
+"def get_user_profile(username):
+    """"""
+    Fetches a user's profile details based on username.
+    Vulnerable to SQL injection via the username parameter.
+    """"""
+    query = ""SELECT id, email, created_at FROM users WHERE username = '%s'"" % username
+    print(f""Executing SQL: {query}"")
+    # In a real scenario, this would involve db_cursor.execute(query) and fetching results
+    return f""Profile data for: {username} (simulated)""",1,sql_injection,"This function fetches user profile details, vulnerable to SQL injection because it directly interpolates the username into a SELECT query using %s."
+"def update_order_status(order_id_str, update_data, current_user_id):
+    """"""
+    Updates an order's status, validating inputs and simulating an authorization check.
+    """"""
+    try:
+        order_id = int(order_id_str)
+        if order_id <= 0:
+            return {""error"": ""Invalid order ID."", ""status"": 400}
+    except ValueError:
+        return {""error"": ""Order ID must be an integer."", ""status"": 400}
+
+    if not isinstance(update_data, dict) or ""status"" not in update_data:
+        return {""error"": ""Request body must specify 'status'."", ""status"": 400}
+
+    new_status = update_data[""status""]
+    if not isinstance(new_status, str) or new_status not in [""pending"", ""shipped"", ""delivered"", ""cancelled""]:
+        return {""error"": ""Invalid status value."", ""status"": 400}
+    
+    # Simulate authorization: Only user 101 can update order 501
+    if order_id == 501 and current_user_id != 101:
+        return {""error"": ""Unauthorized to update this order."", ""status"": 403}
+
+    # Simulate database update
+    return {""message"": f""Order {order_id} status updated to {new_status}."", ""status"": 200}",0,clean,"Updates an order's status, validating path and body parameters, and including a conceptual authorization check."
+"def calculate_average(numbers: list[float]) -> float:
+    """"""
+    Calculates the arithmetic average of a list of numbers.
+    Returns 0.0 for an empty list to avoid ZeroDivisionError.
+    """"""
+    if not isinstance(numbers, list) or not all(isinstance(n, (int, float)) for n in numbers):
+        raise TypeError(""Numbers must be a list of numbers."")
+
+    if not numbers: 
+        return 0.0
+
+    total_sum = sum(numbers)
+    average = total_sum / len(numbers)
+    return average",0,clean,"Calculates the arithmetic average of a list of numbers, returning 0.0 for an empty list."
+"def calculate_sum_of_squares(numbers: list[float]) -> float:
+    """"""
+    Calculates the sum of squares for a list of numbers.
+    Returns 0.0 if the list is empty, as the sum of no squares is zero.
+    """"""
+    if not numbers:
+        return 0.0
+    
+    total_square_sum = 0.0
+    for num in numbers:
+        total_square_sum += num * num
+    return total_square_sum",0,clean,"Calculates the sum of squares for a list of numbers, returning 0.0 if the list is empty."
+"def get_application_configuration(is_admin_request):
+    """"""
+    Retrieves application configuration, hiding sensitive details from non-admin users.
+    """"""
+    full_config = {
+        ""app_name"": ""SecureApp"",
+        ""version"": ""1.0.0"",
+        ""database_url"": ""mysql://user:password@host/db"", # Sensitive
+        ""api_key"": ""supersecretkey123"", # Sensitive
+        ""log_level"": ""INFO"",
+        ""feature_flags"": {""new_ui"": True, ""beta_mode"": False}
+    }
+
+    if is_admin_request:
+        return {""data"": full_config, ""status"": 200}
+    else:
+        # Filter out sensitive information for non-admin users
+        public_config = {
+            k: v for k, v in full_config.items()
+            if k not in [""database_url"", ""api_key""]
+        }
+        return {""data"": public_config, ""status"": 200}",0,clean,"Retrieves application configuration, selectively hiding sensitive details from non-admin requests."
+"def get_products_by_category(conn, category_name):
+    """"""
+    Fetches all products belonging to a specific category from the 'products' table using a parameterized query.
+    """"""
+    cursor = conn.cursor()
+    query = ""SELECT id, name, description, price FROM products WHERE category = ?""
+    cursor.execute(query, (category_name,))
+    products = cursor.fetchall()
+    cursor.close()
+    return products",0,clean,Fetches a list of products that belong to a specified category.
+"def insert_log_entry(message: str, timestamp: str):
+    """"""Inserts a new log entry into the logs table using a parameterized INSERT statement.""""""
+    query = ""INSERT INTO logs (message, timestamp) VALUES (?, ?)""
+    parameters = (message, timestamp)
+    print(f""Executing: '{query}' with parameters: {parameters}"")
+    return f""Simulated insertion of log: '{message}' at '{timestamp}'""",0,clean,This function securely inserts a new log message and timestamp into a database table using a parameterized INSERT statement.
+"def toggle_feature_flag(conn, flag_name, is_enabled):
+    """"""
+    Toggles the status of a feature flag using a parameterized query.
+    `is_enabled` should be a boolean (or 0/1 for DB compatibility).
+    Assumes `conn` is an active database connection object.
+    """"""
+    try:
+        with conn.cursor() as cursor:
+            sql = ""UPDATE feature_flags SET enabled = ? WHERE name = ?""
+            # Convert boolean to integer if the database expects 0/1
+            db_enabled_value = 1 if is_enabled else 0
+            cursor.execute(sql, (db_enabled_value, flag_name))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        # In a real application, log the exception and rollback
+        conn.rollback()
+        return False",0,clean,"Toggles the status of a specific feature flag by its name, setting it to an enabled/disabled boolean value, returning True on success, using a secure parameterized query."
+"def filter_valid_names(names_list: list[str | None] | None) -> list[str]:
+    """"""
+    Filters a list of names, returning a new list containing only
+    non-None and non-empty strings. Returns an empty list if input is None.
+    """"""
+    valid_names = []
+    if names_list is None:
+        return valid_names
+    for name in names_list:
+        if name is not None and name.strip(): # Check for non-empty after stripping
+            valid_names.append(name.strip())
+    return valid_names",0,clean,"Filters a list of names, returning a new list containing only non-None and non-empty strings, or an empty list if the input is None."
