@@ -1,52 +1,43 @@
 """
-services/llm.py — AI calls using Google Gemini (FREE tier).
-
-Get your free API key at: https://aistudio.google.com/app/apikey
-No credit card required. Set it in backend/.env:
-  GEMINI_API_KEY=AIza...
-
-Model used: gemini-1.5-flash  (fast, free, great for code tasks)
+services/llm.py
+All AI calls using the new google-genai SDK.
+Bug classifier runs FIRST — its findings ground the Gemini prompt.
 """
+
 import json
 import os
 import re
 import asyncio
-import google.generativeai as genai
+from google import genai
 
-# ── Gemini client setup ────────────────────────────────────────
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# ── Client setup ───────────────────────────────────────────────
+_client = None
 
-# gemini-2.5-flash  → free tier, fast, excellent at code
-# gemini-2.5-pro    → free tier (lower rate limit), more capable
+def _get_client():
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
+
 MODEL = "gemini-2.5-flash"
-
-_model = genai.GenerativeModel(
-    model_name=MODEL,
-    generation_config=genai.GenerationConfig(
-        temperature=0.2,       # low = more deterministic / accurate
-        max_output_tokens=4096,
-    ),
-)
 
 
 def _clean_json(text: str) -> str:
-    """Strip markdown code fences that Gemini sometimes wraps around JSON."""
     text = text.strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
     return text.strip()
 
 
-async def _ask(prompt: str) -> str:
-    """
-    Send a prompt to Gemini and return the text response.
-    google-generativeai is synchronous, so we run it in a thread pool
-    to avoid blocking FastAPI's async event loop.
-    """
+async def _ask(prompt: str, max_tokens: int = 4096) -> str:
+    """Call Gemini asynchronously using thread pool."""
     loop = asyncio.get_event_loop()
     response = await loop.run_in_executor(
         None,
-        lambda: _model.generate_content(prompt),
+        lambda: _get_client().models.generate_content(
+            model=MODEL,
+            contents=prompt,
+        )
     )
     return response.text
 
@@ -62,16 +53,52 @@ TEST_FRAMEWORKS = {
 }
 
 
+# ── Bug classifier integration ─────────────────────────────────
+
+def _get_classifier_context(code: str) -> str:
+    """
+    Run the local bug classifier and return a context string
+    that gets injected into the Gemini prompt.
+    This grounds Gemini's response in our model's findings.
+    """
+    try:
+        from .bug_classifier import predict, is_available
+        if not is_available():
+            return ""
+
+        result = predict(code)
+        if not result.get("available"):
+            return ""
+
+        if result.get("is_bug"):
+            bug_type   = result["bug_type"]
+            confidence = result["confidence"]
+            return (
+                f"\n[LOCAL CLASSIFIER FINDING] "
+                f"Our fine-tuned CodeBERT model detected a likely "
+                f"'{bug_type}' vulnerability with {confidence*100:.0f}% confidence. "
+                f"Pay special attention to this bug type in your analysis.\n"
+            )
+        else:
+            return (
+                f"\n[LOCAL CLASSIFIER FINDING] "
+                f"Our fine-tuned CodeBERT model classified this code as "
+                f"'{result.get('predicted_class', 'clean')}' "
+                f"({result.get('confidence', 0)*100:.0f}% confidence).\n"
+            )
+    except Exception:
+        return ""
+
+
 # ── Review ─────────────────────────────────────────────────────
 
 async def review_code(code: str, language: str) -> dict:
-    """
-    Full structured code review.
-    Returns a dict matching ReviewResponse schema.
-    """
+    """Full structured code review, grounded by local classifier."""
+    classifier_ctx = _get_classifier_context(code)
+
     prompt = f"""You are a senior software engineer performing a professional code review.
 Analyze the following {language} code thoroughly.
-
+{classifier_ctx}
 Return ONLY a valid JSON object — no markdown fences, no explanation outside the JSON.
 
 Use this exact structure:
@@ -98,9 +125,8 @@ Use this exact structure:
   }}
 }}
 
-Scoring guide: 0-3 = critical issues, 4-6 = moderate, 7-8 = good, 9-10 = excellent.
-Line numbers must be accurate (1-indexed). Be specific and actionable.
-Return ONLY the JSON object — nothing else.
+Scoring: 0-3 = critical, 4-6 = moderate, 7-8 = good, 9-10 = excellent.
+Be precise with line numbers (1-indexed). Return ONLY JSON.
 
 Code to review:
 ```{language}
@@ -114,15 +140,11 @@ Code to review:
 # ── Explain ────────────────────────────────────────────────────
 
 async def explain_code(code: str, language: str) -> str:
-    """
-    Natural-language explanation of what the code does.
-    Returns markdown-formatted text.
-    """
     prompt = f"""You are a helpful programming tutor. Explain what the following {language} code does
 in clear, structured markdown using exactly this format:
 
 ## Overview
-One or two sentence summary of what the code does.
+One or two sentence summary.
 
 ## Key Components
 - Brief bullet point for each function/class/section.
@@ -133,28 +155,24 @@ Step-by-step walkthrough of the main execution flow.
 ## Potential Issues
 2-3 bullet points on obvious bugs, security risks, or improvements.
 
-Be concise, accurate, and educational. Target an intermediate developer.
+Be concise and educational.
 
 Code:
 ```{language}
 {code}
 ```"""
-
     return await _ask(prompt)
 
 
 # ── Fix ────────────────────────────────────────────────────────
 
 async def fix_code(code: str, language: str) -> dict:
-    """
-    Returns fixed code + a changelog list.
-    """
+    classifier_ctx = _get_classifier_context(code)
+
     prompt = f"""You are a senior {language} developer. Fix ALL bugs, security vulnerabilities,
 and performance issues in the code below.
-
-Return ONLY a valid JSON object — no markdown outside the JSON.
-
-Use this exact structure:
+{classifier_ctx}
+Return ONLY a valid JSON object:
 {{
   "fixed_code": "<complete corrected source code as a single string>",
   "changes": [
@@ -165,8 +183,7 @@ Use this exact structure:
 
 Rules:
 - fixed_code must be the complete file, not a diff
-- Add a brief inline comment (# or //) next to each changed line explaining why
-- List every meaningful change in the changes array
+- Add a brief inline comment next to each changed line
 - Return ONLY the JSON object
 
 Code to fix:
@@ -181,12 +198,8 @@ Code to fix:
 # ── Generate Tests ─────────────────────────────────────────────
 
 async def generate_tests(code: str, language: str, filename: str = "") -> dict:
-    """
-    Generates a comprehensive unit test suite.
-    """
     framework = TEST_FRAMEWORKS.get(language, "appropriate test framework")
 
-    # Derive a sensible test filename
     if filename:
         base = filename.rsplit(".", 1)[0]
         ext  = filename.rsplit(".", 1)[-1] if "." in filename else language
@@ -205,11 +218,9 @@ async def generate_tests(code: str, language: str, filename: str = "") -> dict:
 using {framework} for the following {language} code.
 
 Requirements:
-- Test every public function and method
-- Include happy path tests
-- Include edge cases (empty input, None/null, boundary values)
-- Include error/exception handling tests
-- Use descriptive test names that explain what is being tested
+- Test every public function
+- Include happy path, edge cases, error handling, boundary conditions
+- Use descriptive test names
 - Add brief comments grouping related tests
 
 Return ONLY raw test code. No markdown fences, no explanations outside comments.
@@ -220,7 +231,6 @@ Code to test:
 ```"""
 
     raw = await _ask(prompt)
-
     return {
         "test_code": raw,
         "framework": framework,
