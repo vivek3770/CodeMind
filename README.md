@@ -18,6 +18,9 @@
 - **Auto Fix** — AI rewrites your code with all issues fixed and applies it directly to the editor.
 - **Explain Code** — Structured, natural language explanation of what your code does, highlighting key components and execution flow.
 - **Generate Tests** — Automatic unit test generation for various frameworks (pytest, Jest, JUnit, etc.).
+- **Dockerized Code Execution** — Securely execute user code in a containerized sandbox with an integrated terminal.
+- **Local Bug Classifier** — Fine-tuned offline model that pre-scans code for vulnerabilities before AI review.
+- **RAG Memory** — Retrieval-Augmented Generation remembers past code reviews to provide smarter, context-aware suggestions.
 - **Code Visualizer** — Safely trace and visualize your actual Python code execution step by step, showing variable states, call stacks, and changes.
 - **Algorithm Visualizer** — 14 pre-built algorithms animated step by step across sorting, searching, graphs, and data structures.
 - **Resizable Panels** — Drag to resize the file explorer sidebar, main editor area, and right-hand AI/Visualization panels.
@@ -37,8 +40,8 @@
 | Layer | Technology |
 |---|---|
 | Frontend | React 18, Monaco Editor (`@monaco-editor/react`), CSS Modules, Vite |
-| Backend | FastAPI, Python 3.11+, Pydantic, RestrictedPython (for safe tracing) |
-| AI | Google Gemini 2.5 Flash (Free tier via `google-generativeai`) |
+| Backend | FastAPI, Python 3.11+, SQLite, Docker, Pydantic |
+| AI | Google Gemini 2.5 Flash, CodeBERT (Local Classifier), ChromaDB |
 | Styling | Custom cyberpunk design system with dark mode |
 
 ## 🚀 Quick Start
@@ -46,6 +49,7 @@
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
+- Docker (Required for secure code execution)
 - Free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ### Backend
@@ -81,17 +85,20 @@ Open **http://127.0.0.1:8080**
 ```text
 codemind-ide/
 ├── backend/
-│   ├── data/                # Local JSON storage for review histories
+│   ├── data/                # SQLite DBs (Reviews, RAG Memory) & ChromaDB vector store
+│   ├── models/              # Local offline bug classifier ML models
 │   ├── main.py              # FastAPI entry point
 │   ├── models.py            # Pydantic schemas for requests/responses
 │   ├── routers/ai.py        # API endpoints for AI and visualization
 │   └── services/
-│       ├── llm.py           # Gemini AI integration (Review, Fix, Explain, Tests)
+│       ├── llm.py           # Gemini AI integration (Review, Fix, Explain)
+│       ├── test.py          # Automated unit test generation framework
 │       ├── code_tracer.py   # Safe Python execution and variable tracing
-│       ├── code_chunker.py  # AST parser for segmenting code into chunks
-│       ├── code_indexer.py  # Local lightweight semantic search indexing
-│       ├── complexity_analyzer.py # Python cyclomatic/static code analysis 
-│       └── review_history.py # Service for storing/retrieving code reviews
+│       ├── code_executor.py # Dockerized secure code execution
+│       ├── code_indexer.py  # Semantic search indexing (ChromaDB)
+│       ├── rag_pipeline.py  # RAG retrieval and context building
+│       ├── complexity_analyzer.py # Static code complexity analysis 
+│       └── review_history.py # SQLite service for storing code reviews
 └── frontend/
     ├── package.json         # Vite and React dependencies
     ├── vite.config.js       # Vite configuration
