@@ -79,7 +79,12 @@ export default function TopBar({
             : <><span>🎬</span><span>Visualize</span></>
           }
         </button>
-
+        {/* Run Button */}
+        <button className={`btn ${styles.actionBtn}`}
+          onClick={() => window.__terminalRun?.()}
+          style={{ background:'rgba(0,255,157,0.08)', borderColor:'rgba(0,255,157,0.3)', color:'var(--green)', fontWeight:600 }}>
+          <span>▶</span><span>Run</span>
+        </button>
         <div className={styles.sep} />
 
         {/* Toggle algo visualizer (pre-built demos) */}
