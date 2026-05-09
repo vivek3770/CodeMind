@@ -1,6 +1,9 @@
 """
 services/llm.py
-All AI calls using the new google-genai SDK.
+All AI calls using the new google-genai SDK — now with:
+  1. Local bug classifier (Phase 4) — runs first
+  2. RAG context (Phase 5) — past reviews injected into prompt
+  3. New google-genai SDK.
 Bug classifier runs FIRST — its findings ground the Gemini prompt.
 """
 
@@ -90,15 +93,37 @@ def _get_classifier_context(code: str) -> str:
         return ""
 
 
+def _get_rag_context(code: str, language: str) -> str:
+    """Retrieve similar past reviews for RAG grounding."""
+    try:
+        from .rag_pipeline import build_rag_context
+        return build_rag_context(code, language)
+    except Exception:
+        return ""
+
+
+def _store_review(code: str, language: str, result: dict):
+    """Persist review to RAG memory after completion."""
+    try:
+        from .rag_pipeline import store_in_memory
+        store_in_memory(code, language, result)
+    except Exception:
+        pass
+
+
 # ── Review ─────────────────────────────────────────────────────
 
 async def review_code(code: str, language: str) -> dict:
-    """Full structured code review, grounded by local classifier."""
+    """
+    Full structured review.
+    Pipeline: classifier → RAG retrieval → Gemini → store result
+    """
     classifier_ctx = _get_classifier_context(code)
+    rag_ctx        = _get_rag_context(code, language)
 
     prompt = f"""You are a senior software engineer performing a professional code review.
+{classifier_ctx}{rag_ctx}
 Analyze the following {language} code thoroughly.
-{classifier_ctx}
 Return ONLY a valid JSON object — no markdown fences, no explanation outside the JSON.
 
 Use this exact structure:
@@ -132,9 +157,13 @@ Code to review:
 ```{language}
 {code}
 ```"""
+    raw    = await _ask(prompt)
+    result = json.loads(_clean_json(raw))
 
-    raw = await _ask(prompt)
-    return json.loads(_clean_json(raw))
+    # Store in RAG memory for future reviews
+    _store_review(code, language, result)
+
+    return result
 
 
 # ── Explain ────────────────────────────────────────────────────
@@ -168,10 +197,11 @@ Code:
 
 async def fix_code(code: str, language: str) -> dict:
     classifier_ctx = _get_classifier_context(code)
+    rag_ctx        = _get_rag_context(code, language)
 
     prompt = f"""You are a senior {language} developer. Fix ALL bugs, security vulnerabilities,
 and performance issues in the code below.
-{classifier_ctx}
+{classifier_ctx}{rag_ctx}
 Return ONLY a valid JSON object:
 {{
   "fixed_code": "<complete corrected source code as a single string>",
