@@ -13,7 +13,7 @@ import re
 import asyncio
 from google import genai
 
-# ── Client setup ───────────────────────────────────────────────
+# ── Client ─────────────────────────────────────────────────────
 _client = None
 
 def _get_client():
@@ -32,8 +32,7 @@ def _clean_json(text: str) -> str:
     return text.strip()
 
 
-async def _ask(prompt: str, max_tokens: int = 4096) -> str:
-    """Call Gemini asynchronously using thread pool."""
+async def _ask(prompt: str) -> str:
     loop = asyncio.get_event_loop()
     response = await loop.run_in_executor(
         None,
@@ -56,39 +55,29 @@ TEST_FRAMEWORKS = {
 }
 
 
-# ── Bug classifier integration ─────────────────────────────────
+# ── Context builders ───────────────────────────────────────────
 
 def _get_classifier_context(code: str) -> str:
-    """
-    Run the local bug classifier and return a context string
-    that gets injected into the Gemini prompt.
-    This grounds Gemini's response in our model's findings.
-    """
+    """Run local CodeBERT classifier and return context string."""
     try:
         from .bug_classifier import predict, is_available
         if not is_available():
             return ""
-
         result = predict(code)
         if not result.get("available"):
             return ""
-
         if result.get("is_bug"):
-            bug_type   = result["bug_type"]
-            confidence = result["confidence"]
             return (
-                f"\n[LOCAL CLASSIFIER FINDING] "
-                f"Our fine-tuned CodeBERT model detected a likely "
-                f"'{bug_type}' vulnerability with {confidence*100:.0f}% confidence. "
-                f"Pay special attention to this bug type in your analysis.\n"
+                f"\n[CLASSIFIER] Fine-tuned CodeBERT detected "
+                f"'{result['bug_type']}' with "
+                f"{result['confidence']*100:.0f}% confidence. "
+                f"Focus especially on this bug type.\n"
             )
-        else:
-            return (
-                f"\n[LOCAL CLASSIFIER FINDING] "
-                f"Our fine-tuned CodeBERT model classified this code as "
-                f"'{result.get('predicted_class', 'clean')}' "
-                f"({result.get('confidence', 0)*100:.0f}% confidence).\n"
-            )
+        return (
+            f"\n[CLASSIFIER] Fine-tuned CodeBERT classified code as "
+            f"'{result.get('predicted_class','clean')}' "
+            f"({result.get('confidence',0)*100:.0f}% confidence).\n"
+        )
     except Exception:
         return ""
 
@@ -124,39 +113,26 @@ async def review_code(code: str, language: str) -> dict:
     prompt = f"""You are a senior software engineer performing a professional code review.
 {classifier_ctx}{rag_ctx}
 Analyze the following {language} code thoroughly.
-Return ONLY a valid JSON object — no markdown fences, no explanation outside the JSON.
+Return ONLY a valid JSON object — no markdown, no text outside JSON.
 
-Use this exact structure:
 {{
-  "score": <integer 0-10>,
-  "summary": "<one sentence describing overall quality>",
-  "bugs": [
-    {{"line": <integer>, "message": "<clear description>", "severity": "error|warning|info"}}
-  ],
-  "performance": [
-    {{"line": <integer>, "message": "<clear description>", "severity": "warning|info"}}
-  ],
-  "security": [
-    {{"line": <integer>, "message": "<clear description>", "severity": "error|warning"}}
-  ],
-  "readability": [
-    {{"line": <integer>, "message": "<clear description>", "severity": "info"}}
-  ],
+  "score": <0-10>,
+  "summary": "<one sentence>",
+  "bugs": [{{"line":<int>,"message":"<text>","severity":"error|warning|info"}}],
+  "performance": [{{"line":<int>,"message":"<text>","severity":"warning|info"}}],
+  "security": [{{"line":<int>,"message":"<text>","severity":"error|warning"}}],
+  "readability": [{{"line":<int>,"message":"<text>","severity":"info"}}],
   "scoreBreakdown": {{
-    "correctness": <integer 0-10>,
-    "performance": <integer 0-10>,
-    "security":    <integer 0-10>,
-    "readability": <integer 0-10>
+    "correctness":<0-10>,"performance":<0-10>,
+    "security":<0-10>,"readability":<0-10>
   }}
 }}
 
-Scoring: 0-3 = critical, 4-6 = moderate, 7-8 = good, 9-10 = excellent.
-Be precise with line numbers (1-indexed). Return ONLY JSON.
-
-Code to review:
+Code:
 ```{language}
 {code}
 ```"""
+
     raw    = await _ask(prompt)
     result = json.loads(_clean_json(raw))
 
@@ -169,22 +145,20 @@ Code to review:
 # ── Explain ────────────────────────────────────────────────────
 
 async def explain_code(code: str, language: str) -> str:
-    prompt = f"""You are a helpful programming tutor. Explain what the following {language} code does
-in clear, structured markdown using exactly this format:
+    prompt = f"""You are a helpful programming tutor. Explain the following {language} code
+in clear structured markdown:
 
 ## Overview
 One or two sentence summary.
 
 ## Key Components
-- Brief bullet point for each function/class/section.
+- Bullet for each function/class.
 
 ## How It Works
-Step-by-step walkthrough of the main execution flow.
+Step-by-step execution flow.
 
 ## Potential Issues
-2-3 bullet points on obvious bugs, security risks, or improvements.
-
-Be concise and educational.
+2-3 bullet points on risks or improvements.
 
 Code:
 ```{language}
@@ -199,24 +173,16 @@ async def fix_code(code: str, language: str) -> dict:
     classifier_ctx = _get_classifier_context(code)
     rag_ctx        = _get_rag_context(code, language)
 
-    prompt = f"""You are a senior {language} developer. Fix ALL bugs, security vulnerabilities,
-and performance issues in the code below.
+    prompt = f"""You are a senior {language} developer.
 {classifier_ctx}{rag_ctx}
-Return ONLY a valid JSON object:
+Fix ALL bugs, security vulnerabilities, and performance issues.
+Return ONLY JSON:
 {{
-  "fixed_code": "<complete corrected source code as a single string>",
-  "changes": [
-    "<short description of fix 1>",
-    "<short description of fix 2>"
-  ]
+  "fixed_code": "<complete corrected source>",
+  "changes": ["<fix 1>","<fix 2>"]
 }}
 
-Rules:
-- fixed_code must be the complete file, not a diff
-- Add a brief inline comment next to each changed line
-- Return ONLY the JSON object
-
-Code to fix:
+Code:
 ```{language}
 {code}
 ```"""
@@ -225,9 +191,10 @@ Code to fix:
     return json.loads(_clean_json(raw))
 
 
-# ── Generate Tests ─────────────────────────────────────────────
+# ── Tests ──────────────────────────────────────────────────────
 
-async def generate_tests(code: str, language: str, filename: str = "") -> dict:
+async def generate_tests(code: str, language: str,
+                         filename: str = "") -> dict:
     framework = TEST_FRAMEWORKS.get(language, "appropriate test framework")
 
     if filename:
@@ -242,27 +209,16 @@ async def generate_tests(code: str, language: str, filename: str = "") -> dict:
         else:
             test_filename = f"{base}_test.{ext}"
     else:
-        test_filename = f"test_code.{'py' if language == 'python' else 'test.js'}"
+        test_filename = "test_code.py"
 
-    prompt = f"""You are an expert test engineer. Write a comprehensive unit test suite
-using {framework} for the following {language} code.
+    prompt = f"""Write a comprehensive {framework} test suite for this {language} code.
+Include: happy path, edge cases, error handling, boundaries.
+Return ONLY raw test code, no markdown.
 
-Requirements:
-- Test every public function
-- Include happy path, edge cases, error handling, boundary conditions
-- Use descriptive test names
-- Add brief comments grouping related tests
-
-Return ONLY raw test code. No markdown fences, no explanations outside comments.
-
-Code to test:
+Code:
 ```{language}
 {code}
 ```"""
 
     raw = await _ask(prompt)
-    return {
-        "test_code": raw,
-        "framework": framework,
-        "filename":  test_filename,
-    }
+    return {"test_code": raw, "framework": framework, "filename": test_filename}
