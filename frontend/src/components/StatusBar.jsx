@@ -1,5 +1,6 @@
 import React from 'react'
 import styles from './StatusBar.module.css'
+import ClassifierBadge from './ClassifierBadge'
 
 export default function StatusBar({ status, language, lines, chars, cursor }) {
   return (
@@ -8,7 +9,7 @@ export default function StatusBar({ status, language, lines, chars, cursor }) {
         <div className={styles.dot} />
         <span>{status || 'Ready'}</span>
       </div>
-
+      <ClassifierBadge />
       <div className={styles.langChip}>
         {language?.toUpperCase() || 'PYTHON'}
       </div>
