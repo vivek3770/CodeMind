@@ -46,6 +46,7 @@ try:
     from backend.services.complexity_analyzer import analyze_code
     from backend.services.code_indexer     import index_file, search_code, get_status as idx_status
     from backend.services.review_history   import save_review, get_all_reviews, get_stats, delete_all
+    from backend.services.code_executor    import execute_code, get_status as exec_status, is_available as exec_available
     from backend.services.rag_pipeline     import get_similar_review_summary
 except ModuleNotFoundError:
     from models import (
@@ -57,6 +58,7 @@ except ModuleNotFoundError:
     from services.complexity_analyzer import analyze_code
     from services.code_indexer     import index_file, search_code, get_status as idx_status
     from services.review_history   import save_review, get_all_reviews, get_stats, delete_all
+    from services.code_executor    import execute_code, get_status as exec_status, is_available as exec_available
     from services.rag_pipeline     import get_similar_review_summary
 
 
@@ -221,6 +223,49 @@ async def clear_history():
 # ══════════════════════════════════════════════════════════════
 # PHASE 5 — CODE EXECUTION + RAG
 # ══════════════════════════════════════════════════════════════
+
+class RunRequest(BaseModel):
+    code:     str
+    language: str = "python"
+    stdin:    Optional[str] = None
+
+
+@router.post("/run")
+async def run_code(request: RunRequest):
+    """
+    Execute code in a Docker sandbox.
+    Returns stdout, stderr, exit code, execution time.
+    """
+    if not request.code.strip():
+        raise HTTPException(status_code=400, detail="Code cannot be empty")
+
+    if not exec_available():
+        status = exec_status()
+        return {
+            "success":        False,
+            "stdout":         "",
+            "stderr":         status.get("message", "Docker not available"),
+            "exit_code":      -1,
+            "execution_time": 0,
+            "timed_out":      False,
+            "error":          status.get("message"),
+            "docker_available": False,
+        }
+
+    loop   = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        None,
+        lambda: execute_code(request.code, request.language, request.stdin)
+    )
+    result["docker_available"] = True
+    return result
+
+
+@router.get("/run/status")
+async def run_status():
+    """Check if Docker is available for code execution."""
+    return exec_status()
+
 
 class RAGRequest(BaseModel):
     code:     str
