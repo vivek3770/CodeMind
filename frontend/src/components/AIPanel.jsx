@@ -4,6 +4,7 @@ import IssueSection from './IssueSection'
 import OutputPanel  from './OutputPanel'
 import styles from './AIPanel.module.css'
 import ComplexityPanel from './ComplexityPanel'
+import RAGMemoryBadge from './RAGMemoryBadge'
 
 const SECTIONS = [
   { key: 'bugs',        icon: '🐛', title: 'Bugs',        category: 'bugs'        },
@@ -27,6 +28,7 @@ export default function AIPanel({
   onOpenHistory,
   complexityData,
   style,
+  ragSummary,
 }) {
   if (!visible) return null
 
@@ -90,6 +92,10 @@ export default function AIPanel({
               score={reviewResult.score}
               summary={reviewResult.summary}
               scoreBreakdown={reviewResult.score_breakdown ?? reviewResult.scoreBreakdown ?? {}}
+            />
+            {/* RAG */}
+              <RAGMemoryBadge 
+              summary={ragSummary} 
             />
             {/* Complexity analysis */}
             <ComplexityPanel
