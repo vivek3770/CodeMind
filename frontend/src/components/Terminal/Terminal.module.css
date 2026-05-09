@@ -1,0 +1,225 @@
+/* Terminal/Terminal.module.css */
+
+.terminal {
+  background: #0a0f14;
+  border-top: 1px solid var(--border1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Resize handle at top */
+.resizeHandle {
+  height: 4px;
+  background: transparent;
+  cursor: row-resize;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+}
+.resizeHandle:hover { background: rgba(0,255,157,0.3); }
+.resizeHandle.dragging { background: rgba(0,255,157,0.5); }
+
+/* Header bar */
+.header {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  flex-shrink: 0;
+  background: #0d1520;
+  border-bottom: 1px solid var(--border0);
+  margin-top: 4px;
+}
+
+.title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tx2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 5px var(--green);
+}
+.dot.idle   { background: var(--tx3); box-shadow: none; }
+.dot.running {
+  background: var(--yellow);
+  box-shadow: 0 0 5px var(--yellow);
+  animation: blink 0.8s ease-in-out infinite;
+}
+.dot.error  { background: var(--red); box-shadow: 0 0 5px var(--red); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.headerRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.iconBtn:hover { color: var(--tx1); background: var(--surface3); }
+
+.runBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(0,255,157,0.35);
+  background: rgba(0,255,157,0.08);
+  color: var(--green);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.runBtn:hover {
+  background: rgba(0,255,157,0.15);
+  border-color: var(--green);
+  box-shadow: 0 0 10px rgba(0,255,157,0.2);
+}
+.runBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.stopBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,68,102,0.35);
+  background: rgba(255,68,102,0.08);
+  color: var(--red);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  transition: all 0.15s;
+}
+.stopBtn:hover { background: rgba(255,68,102,0.15); border-color: var(--red); }
+
+/* Output area */
+.output {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 8px 14px 12px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: #c8d4e0;
+  min-height: 0;
+}
+
+.output::-webkit-scrollbar { width: 5px; height: 5px; }
+.output::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Prompt line */
+.promptLine {
+  color: var(--green);
+  margin-bottom: 4px;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Stdout */
+.stdout { color: #d0e8d0; white-space: pre-wrap; word-break: break-all; }
+
+/* Stderr */
+.stderr { color: #ff8899; white-space: pre-wrap; word-break: break-all; }
+
+/* Exit info */
+.exitInfo {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--tx3);
+  border-top: 1px solid var(--border0);
+  padding-top: 6px;
+}
+
+.exitOk  { color: var(--green); font-weight: 700; }
+.exitErr { color: var(--red);   font-weight: 700; }
+.execTime { color: var(--tx3); font-family: var(--font-mono); }
+
+/* Timeout warning */
+.timeoutMsg {
+  color: var(--yellow);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Empty / idle state */
+.idle {
+  color: var(--tx3);
+  font-style: italic;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+/* Docker not available */
+.dockerMissing {
+  background: rgba(255,204,0,0.05);
+  border: 1px solid rgba(255,204,0,0.2);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin: 8px 0;
+}
+.dockerMissingTitle { font-size: 12px; font-weight: 700; color: var(--yellow); margin-bottom: 4px; }
+.dockerMissingText  { font-size: 11px; color: var(--tx2); line-height: 1.6; }
+.dockerMissingCode  {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface0);
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-top: 6px;
+  color: var(--cyan);
+  display: block;
+}
+
+/* Running spinner */
+.runningLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--tx2);
+  font-size: 12px;
+}
+.miniSpinner {
+  width: 10px; height: 10px;
+  border: 1.5px solid var(--surface3);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
