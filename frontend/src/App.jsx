@@ -20,6 +20,7 @@ import { useCodeVisualizer } from './hooks/useCodeVisualizer'
 import { applyMarkers, clearMarkers } from './utils/markerUtils'
 import './styles/globals.css'
 import styles from './App.module.css'
+import Terminal from './components/Terminal/Terminal'
 
 // Right panel modes
 const PANEL = { AI: 'ai', ALGO: 'algo', CODE_VIZ: 'codeviz', HISTORY: 'history', NONE: 'none' }
@@ -44,6 +45,9 @@ export default function App() {
   const [historyVisible,   setHistoryVisible]   = useState(false)
   const [sidebarW,    setSidebarW]    = useState(200)
   const [rightW,      setRightW]      = useState(360)
+  const [terminalVisible, setTerminalVisible] = useState(true)
+  const [terminalHeight,  setTerminalHeight]  = useState(180)
+  const [ragSummary, setRagSummary] = useState(null)
 
   // ── UI state ──────────────────────────────────────────────
   const [toast,     setToast]     = useState(null)
@@ -133,6 +137,15 @@ export default function App() {
   setActivePanel(PANEL.AI)
   const code = getCurrentCode()
   const lang = files[activeFile]?.language ?? 'python'
+
+  fetch('http://127.0.0.1:8000/api/rag/similar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, language: lang })
+  }).then(r => r.json()).then(d => {
+    if (d.found) setRagSummary(d.summary)
+  }).catch(() => {})
+
   reviewCode(code, lang, activeFile)
 
   // Also fetch complexity in parallel
@@ -272,7 +285,15 @@ export default function App() {
               setCharCount(value.length)
             }}
           />
+          <Terminal
+            code={getCurrentCode()}
+            language={files[activeFile]?.language ?? 'python'}
+            visible={terminalVisible}
+            height={terminalHeight}
+            onHeightChange={setTerminalHeight}
+  />
         </div>
+
 
         {/* Right panel resize handle */}
         {rightPanelVisible && (
