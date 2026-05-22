@@ -20,3 +20,10 @@ dist/
 .vscode/
 .idea/
 *.swp
+frontend/.env.production
+
+# Local databases and scratch files
+backend/data/**/*.db
+backend/data/**/*.sqlite3
+backend/models/
+*.txt
