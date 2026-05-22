@@ -1,7 +1,9 @@
 /* ScoreCard.module.css */
 
 .card {
-  background: linear-gradient(135deg, var(--surface2), var(--surface1));
+  background: linear-gradient(135deg, rgba(22,36,53,0.4), rgba(15,30,46,0.4));
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
   border: 1px solid var(--border2);
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -12,6 +14,14 @@
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  transition: all 0.4s var(--ease-spring);
+  transform: translateY(0);
+}
+
+.card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0,200,255,0.15), 0 4px 24px rgba(0,0,0,0.5);
+  border-color: var(--cyan-dim);
 }
 
 .card::before {

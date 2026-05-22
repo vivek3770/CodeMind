@@ -4,8 +4,18 @@
   border: 1px solid var(--border1);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: var(--surface1);
+  background: rgba(15,30,46,0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   flex-shrink: 0;
+  transition: all 0.4s var(--ease-spring);
+  transform: translateY(0);
+}
+
+.section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  border-color: var(--border2);
 }
 
 .head {
@@ -74,8 +84,12 @@
   padding: 10px 14px 10px 30px;
   border-top: 1px solid var(--border0);
   cursor: pointer;
-  transition: background 0.12s;
+  transition: all 0.3s var(--ease-spring);
   position: relative;
+}
+
+.item:active {
+  transform: scale(0.98);
 }
 
 .item::before {

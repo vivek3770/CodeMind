@@ -2,6 +2,8 @@
 
 .sidebar {
   background: linear-gradient(180deg, var(--surface0) 0%, var(--deep) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-right: 1px solid var(--border1);
   display: flex;
   flex-direction: column;
@@ -51,9 +53,21 @@
   padding: 6px 14px;
   cursor: pointer;
   border-left: 2px solid transparent;
-  transition: all 0.15s ease;
+  transition: all 0.3s var(--ease-spring);
   position: relative;
+  animation: slideIn 0.4s var(--ease-out) backwards;
 }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fileItem:nth-child(1) { animation-delay: 0.05s; }
+.fileItem:nth-child(2) { animation-delay: 0.1s; }
+.fileItem:nth-child(3) { animation-delay: 0.15s; }
+.fileItem:nth-child(4) { animation-delay: 0.2s; }
+.fileItem:nth-child(5) { animation-delay: 0.25s; }
 
 .fileItem::before {
   content: '';
@@ -61,7 +75,7 @@
   inset: 0;
   background: linear-gradient(90deg, var(--cyan-glow), transparent);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.3s var(--ease-smooth);
 }
 
 .fileItem:hover::before { opacity: 1; }
@@ -137,13 +151,14 @@
   font-weight: 500;
   letter-spacing: 0.05em;
   text-align: center;
-  transition: all 0.2s;
+  transition: all 0.3s var(--ease-spring);
 }
 .addBtn:hover {
   border-color: var(--cyan-dim);
   color: var(--cyan);
   background: var(--cyan-glow);
-  box-shadow: 0 0 12px var(--cyan-glow);
+  box-shadow: 0 0 16px var(--cyan-glow);
+  transform: translateY(-1px);
 }
 
 /* Modal */

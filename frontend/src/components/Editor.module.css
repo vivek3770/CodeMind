@@ -2,7 +2,7 @@
   flex: 1;
   overflow: hidden;
   height: 100%;
-  background: #020408;
+  background: transparent;
 }
 .empty {
   flex: 1;
@@ -11,5 +11,5 @@
   justify-content: center;
   color: #2d5570;
   font-size: 13px;
-  background: #020408;
+  background: transparent;
 }
