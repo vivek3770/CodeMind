@@ -61,7 +61,6 @@ export default function AIPanel({
             <div className={styles.loadingText}>
               {LOADING_LABELS[loadingAction] ?? 'Working'}<span className={styles.dots} />
             </div>
-            <div className={styles.loadingHint}>Powered by Gemini AI</div>
           </div>
         )}
 
