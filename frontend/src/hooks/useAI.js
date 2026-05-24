@@ -5,7 +5,7 @@
  */
 import { useState, useCallback } from 'react'
 
-const API_BASE = 'http://127.0.0.1:8000/api'
+const API_BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://127.0.0.1:8000/api'
 
 async function post(endpoint, body) {
   const res = await fetch(`${API_BASE}${endpoint}`, {

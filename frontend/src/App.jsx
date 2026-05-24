@@ -16,7 +16,7 @@ import { applyMarkers, clearMarkers } from './utils/markerUtils'
 import './styles/globals.css'
 import styles from './App.module.css'
 
-const API = 'http://127.0.0.1:8000/api'
+const API = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://127.0.0.1:8000/api'
 const PANEL = { AI:'ai', ALGO:'algo', CODE_VIZ:'codeviz', HISTORY:'history', NONE:'none' }
 
 export default function App() {
