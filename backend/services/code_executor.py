@@ -118,29 +118,33 @@ def pull_image_if_needed(language: str) -> bool:
             return False
 
 
-import httpx
+ONLINE_COMPILER_KEY = os.getenv("ONLINE_COMPILER_KEY")
+ONLINE_COMPILER_URL = "https://api.onlinecompiler.io/api/run-code-sync/"
 
-PISTON_URL = "https://piston.3rrd.workers.dev/api/v2/execute"
-
-PISTON_LANGUAGES = {
-    "python": "python",
-    "javascript": "javascript",
+ONLINE_COMPILER_LANGUAGES = {
+    "python": "python3",
+    "javascript": "nodejs",
     "typescript": "typescript",
     "java": "java",
 }
 
-PISTON_VERSIONS = {
-    "python": "*",
-    "javascript": "*",
-    "typescript": "*",
-    "java": "*",
-}
 
+def _execute_online_compiler(code: str, language: str) -> Dict:
+    """Fallback execution using OnlineCompiler.io when Docker is unavailable."""
+    if not ONLINE_COMPILER_KEY:
+        return {
+            "success":        False,
+            "stdout":         "",
+            "stderr":         "OnlineCompiler.io API key is not configured.\n\nPlease sign up for a free account at https://api.onlinecompiler.io (gives 1M free runs/month) and add 'ONLINE_COMPILER_KEY' to your environment variables on Render and local .env to enable code execution.",
+            "exit_code":      -1,
+            "execution_time": 0,
+            "timed_out":      False,
+            "error":          "API key missing",
+            "docker_available": True,  # Prevent terminal error screen
+        }
 
-def _execute_piston(code: str, language: str) -> Dict:
-    """Fallback serverless execution using Piston API when Docker is unavailable."""
-    piston_lang = PISTON_LANGUAGES.get(language)
-    if not piston_lang:
+    compiler = ONLINE_COMPILER_LANGUAGES.get(language)
+    if not compiler:
         return {
             "success":        False,
             "stdout":         "",
@@ -152,20 +156,19 @@ def _execute_piston(code: str, language: str) -> Dict:
         }
 
     payload = {
-        "language": piston_lang,
-        "version": PISTON_VERSIONS.get(language, "*"),
-        "files": [
-            {
-                "name": "main" + ("." + FILE_EXTENSIONS[language] if language in FILE_EXTENSIONS else ""),
-                "content": code
-            }
-        ]
+        "compiler": compiler,
+        "code": code,
+        "input": ""
+    }
+    headers = {
+        "Authorization": f"Bearer {ONLINE_COMPILER_KEY}",
+        "Content-Type": "application/json"
     }
 
     start_time = time.time()
     try:
         with httpx.Client() as client:
-            response = client.post(PISTON_URL, json=payload, timeout=12.0)
+            response = client.post(ONLINE_COMPILER_URL, json=payload, headers=headers, timeout=15.0)
         
         elapsed_ms = round((time.time() - start_time) * 1000, 1)
 
@@ -173,29 +176,29 @@ def _execute_piston(code: str, language: str) -> Dict:
             return {
                 "success":        False,
                 "stdout":         "",
-                "stderr":         f"Serverless execution error: Piston API returned status {response.status_code}",
+                "stderr":         f"Serverless execution error: API returned status {response.status_code}\n{response.text}",
                 "exit_code":      -1,
                 "execution_time": elapsed_ms,
                 "timed_out":      False,
-                "error":          f"Piston API returned status {response.status_code}",
+                "error":          f"API returned status {response.status_code}",
             }
 
         result = response.json()
-        run_info = result.get("run", {})
         
-        exit_code = run_info.get("code", 0)
-        stdout_text = run_info.get("stdout", "")
-        stderr_text = run_info.get("stderr", "")
+        stdout_text = result.get("output", "")
+        stderr_text = result.get("error", "")
+        status = result.get("status", "success")
+        exit_code = result.get("exit_code", 0)
 
         return {
-            "success":        exit_code == 0,
+            "success":        status == "success" and exit_code == 0,
             "stdout":         stdout_text,
             "stderr":         stderr_text,
             "exit_code":      exit_code,
             "execution_time": elapsed_ms,
             "timed_out":      False,
             "error":          None,
-            "docker_available": True,  # Prevent frontend from showing 'Docker not available' warning
+            "docker_available": True,
         }
     except Exception as e:
         elapsed_ms = round((time.time() - start_time) * 1000, 1)
@@ -219,7 +222,7 @@ def execute_code(code: str, language: str,
     If Docker is not available (e.g. deployed on Render), fall back to Piston serverless execution.
     """
     if not is_available():
-        return _execute_piston(code, language)
+        return _execute_online_compiler(code, language)
 
     if language not in DOCKER_IMAGES:
         return {
