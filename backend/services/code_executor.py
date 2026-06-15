@@ -22,6 +22,7 @@ import tempfile
 import threading
 from pathlib import Path
 from typing import Dict, Optional
+import httpx
 
 # ── Docker import with graceful fallback ──────────────────────
 try:
