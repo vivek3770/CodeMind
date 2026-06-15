@@ -123,10 +123,10 @@ ONLINE_COMPILER_KEY = os.getenv("ONLINE_COMPILER_KEY")
 ONLINE_COMPILER_URL = "https://api.onlinecompiler.io/api/run-code-sync/"
 
 ONLINE_COMPILER_LANGUAGES = {
-    "python": "python",
-    "javascript": "typescript",  # Executed via Deno (supports JS & TS)
-    "typescript": "typescript",
-    "java": "java",
+    "python": "python-3.14",
+    "javascript": "typescript-deno",  # Executed via Deno (supports JS & TS)
+    "typescript": "typescript-deno",
+    "java": "openjdk-25",
 }
 
 
