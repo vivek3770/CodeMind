@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 HF_TOKEN = os.getenv("HF_TOKEN")
 # Default model repo: username/repo_name
 HF_MODEL_REPO = os.getenv("HF_MODEL_REPO", "Monkey3770/Codebert-bug-classifier")
-HF_MODEL_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_REPO}"
+HF_MODEL_URL = f"https://router.huggingface.co/hf-inference/models/{HF_MODEL_REPO}"
 
 LABEL_NAMES = ["clean", "sql_injection", "division_by_zero", "null_reference", "xss"]
 CONFIDENCE_THRESHOLD = 0.65   # minimum confidence to flag as a bug
