@@ -162,7 +162,7 @@ def _execute_online_compiler(code: str, language: str) -> Dict:
         "input": ""
     }
     headers = {
-        "Authorization": f"Bearer {ONLINE_COMPILER_KEY}",
+        "Authorization": ONLINE_COMPILER_KEY,
         "Content-Type": "application/json"
     }
 
