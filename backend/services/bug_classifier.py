@@ -1,97 +1,50 @@
 """
 services/bug_classifier.py
-Loads the fine-tuned CodeBERT model and runs inference.
+Queries the fine-tuned CodeBERT model on Hugging Face using the Serverless Inference API.
 
-After training, this service:
-  1. Loads on FastAPI startup (once, not per request)
-  2. Runs predict() in milliseconds
-  3. Returns confidence scores for all 5 bug classes
-  4. Is called BEFORE Gemini in the review pipeline
-     so Gemini gets grounded context from the classifier
+This approach:
+  1. Requires no local 'torch' or 'transformers' installation (keeping dependencies light).
+  2. Uses 0MB of RAM on the server (preventing Out Of Memory crashes on Render).
+  3. Queries the model serverlessly and returns bug classifications in milliseconds.
 """
 
 import os
 import json
 import logging
-from pathlib import Path
+import httpx
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-MODEL_DIR    = Path(__file__).resolve().parents[1] / "models" / "bug_classifier"
-METRICS_FILE = MODEL_DIR / "metrics.json"
+# Hugging Face Configuration
+HF_TOKEN = os.getenv("HF_TOKEN")
+# Default model repo: username/repo_name
+HF_MODEL_REPO = os.getenv("HF_MODEL_REPO", "Monkey3770/Codebert-bug-classifier")
+HF_MODEL_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_REPO}"
 
 LABEL_NAMES = ["clean", "sql_injection", "division_by_zero", "null_reference", "xss"]
 CONFIDENCE_THRESHOLD = 0.65   # minimum confidence to flag as a bug
 
-# ── Lazy-loaded singletons ─────────────────────────────────────
-_tokenizer = None
-_model     = None
-_metrics   = None
-_available = None   # None = not checked, True/False = checked
-
 
 def is_available() -> bool:
-    """Check if the trained model exists and can be loaded."""
-    global _available
-    if _available is None:
-        _available = (
-            MODEL_DIR.exists() and
-            (MODEL_DIR / "config.json").exists() and
-            _try_import()
-        )
-    return _available
-
-
-def _try_import() -> bool:
-    """Test if torch and transformers are importable."""
-    try:
-        import torch                                           # noqa
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification  # noqa
-        return True
-    except ImportError:
-        return False
-
-
-def _load_model():
-    """Load tokenizer and model into memory (called once)."""
-    global _tokenizer, _model
-    if _tokenizer is not None:
-        return True
-
-    try:
-        import torch
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
-        logger.info(f"Loading bug classifier from {MODEL_DIR}")
-        _tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
-        _model     = AutoModelForSequenceClassification.from_pretrained(str(MODEL_DIR))
-        _model.eval()
-
-        # Use CPU — no GPU needed for inference
-        _model = _model.to(torch.device("cpu"))
-        logger.info("Bug classifier loaded ✓")
-        return True
-    except Exception as e:
-        logger.warning(f"Could not load bug classifier: {e}")
-        return False
+    """Check if the Hugging Face API token is configured."""
+    return HF_TOKEN is not None
 
 
 def get_metrics() -> Optional[Dict]:
-    """Return training metrics (accuracy, F1) from metrics.json."""
-    global _metrics
-    if _metrics is None and METRICS_FILE.exists():
-        try:
-            with open(METRICS_FILE) as f:
-                _metrics = json.load(f)
-        except Exception:
-            pass
-    return _metrics
+    """Return hardcoded training metrics (accuracy, F1) from your training run."""
+    # Since we are serverless, we can provide the metrics here directly
+    return {
+        "accuracy": 0.7083,
+        "f1_macro": 0.4146,
+        "label_names": LABEL_NAMES,
+        "threshold": CONFIDENCE_THRESHOLD
+    }
 
 
 def predict(code: str) -> Dict:
     """
-    Run inference on a code snippet.
+    Run inference on a code snippet by querying Hugging Face Inference API.
 
     Returns:
     {
@@ -113,53 +66,67 @@ def predict(code: str) -> Dict:
     if not is_available():
         return {
             "available":       False,
-            "message":         "Bug classifier not trained yet. Run data_collector.py then train_classifier.ipynb.",
+            "message":         "Hugging Face API Token (HF_TOKEN) is not configured. Please add it to your environment variables.",
             "predicted_class": None,
             "confidence":      0.0,
             "is_bug":          False,
         }
 
-    if not _load_model():
-        return {
-            "available":       False,
-            "message":         "Failed to load model.",
-            "predicted_class": None,
-            "confidence":      0.0,
-            "is_bug":          False,
-        }
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    payload = {
+        "inputs": code,
+        "options": {"wait_for_model": True}  # Tells HF to wait and load the model if it is idle/sleeping
+    }
 
     try:
-        import torch
+        # Query the Serverless Inference API
+        with httpx.Client() as client:
+            response = client.post(HF_MODEL_URL, json=payload, headers=headers, timeout=20.0)
 
-        inputs = _tokenizer(
-            code,
-            return_tensors="pt",
-            max_length=512,
-            truncation=True,
-            padding=True,
-        )
+        if response.status_code != 200:
+            logger.error(f"Hugging Face API returned error status {response.status_code}: {response.text}")
+            return {
+                "available":       True,
+                "predicted_class": "error",
+                "confidence":      0.0,
+                "is_bug":          False,
+                "error":           f"Hugging Face API returned status {response.status_code}",
+            }
 
-        with torch.no_grad():
-            outputs = _model(**inputs)
-            probs   = torch.softmax(outputs.logits, dim=1)[0]
+        result = response.json()
 
-        scores = {name: round(float(probs[i]), 4) for i, name in enumerate(LABEL_NAMES)}
-        pred_idx   = int(probs.argmax())
-        pred_class = LABEL_NAMES[pred_idx]
-        confidence = float(probs[pred_idx])
+        # Hugging Face sequence classification returns a nested list: [[{"label": "...", "score": ...}, ...]]
+        if isinstance(result, list) and len(result) > 0 and isinstance(result[0], list):
+            predictions = result[0]
+            scores = {item["label"]: round(item["score"], 4) for item in predictions}
+            
+            # Find the prediction with the highest score
+            best_prediction = max(predictions, key=lambda x: x["score"])
+            pred_class = best_prediction["label"]
+            confidence = best_prediction["score"]
+            pred_idx = LABEL_NAMES.index(pred_class) if pred_class in LABEL_NAMES else 0
 
-        is_bug   = pred_class != "clean" and confidence >= CONFIDENCE_THRESHOLD
-        bug_type = pred_class if is_bug else None
+            is_bug = pred_class != "clean" and confidence >= CONFIDENCE_THRESHOLD
+            bug_type = pred_class if is_bug else None
 
-        return {
-            "available":       True,
-            "predicted_class": pred_class,
-            "predicted_label": pred_idx,
-            "confidence":      round(confidence, 4),
-            "all_scores":      scores,
-            "is_bug":          is_bug,
-            "bug_type":        bug_type,
-        }
+            return {
+                "available":       True,
+                "predicted_class": pred_class,
+                "predicted_label": pred_idx,
+                "confidence":      round(confidence, 4),
+                "all_scores":      scores,
+                "is_bug":          is_bug,
+                "bug_type":        bug_type,
+            }
+        else:
+            logger.error(f"Unexpected response format from HF API: {result}")
+            return {
+                "available":       True,
+                "predicted_class": "error",
+                "confidence":      0.0,
+                "is_bug":          False,
+                "error":           f"Unexpected API response format: {result}",
+            }
 
     except Exception as e:
         logger.error(f"Inference error: {e}")
@@ -182,15 +149,15 @@ def get_status() -> Dict:
     m = get_metrics()
     return {
         "available":     is_available(),
-        "model_dir":     str(MODEL_DIR),
-        "model_exists":  MODEL_DIR.exists(),
+        "model_repo":    HF_MODEL_REPO,
         "accuracy":      m.get("accuracy") if m else None,
         "f1_macro":      m.get("f1_macro") if m else None,
         "label_names":   LABEL_NAMES,
         "threshold":     CONFIDENCE_THRESHOLD,
         "message":       (
-            f"Ready — {m['accuracy']*100:.1f}% accuracy"
-            if m else
-            "Model not trained. Run data_collector.py → train_classifier.ipynb"
+            f"Ready — Hugging Face Serverless ({m['accuracy']*100:.1f}% accuracy)"
+            if is_available() else
+            "Model unavailable. HF_TOKEN is not set."
         ),
     }
+
