@@ -123,14 +123,14 @@ ONLINE_COMPILER_KEY = os.getenv("ONLINE_COMPILER_KEY")
 ONLINE_COMPILER_URL = "https://api.onlinecompiler.io/api/run-code-sync/"
 
 ONLINE_COMPILER_LANGUAGES = {
-    "python": "python3",
-    "javascript": "nodejs",
+    "python": "python",
+    "javascript": "typescript",  # Executed via Deno (supports JS & TS)
     "typescript": "typescript",
     "java": "java",
 }
 
 
-def _execute_online_compiler(code: str, language: str) -> Dict:
+def _execute_online_compiler(code: str, language: str, stdin_input: Optional[str] = None) -> Dict:
     """Fallback execution using OnlineCompiler.io when Docker is unavailable."""
     if not ONLINE_COMPILER_KEY:
         return {
@@ -159,7 +159,7 @@ def _execute_online_compiler(code: str, language: str) -> Dict:
     payload = {
         "compiler": compiler,
         "code": code,
-        "input": ""
+        "input": stdin_input or ""
     }
     headers = {
         "Authorization": ONLINE_COMPILER_KEY,
@@ -195,10 +195,22 @@ def _execute_online_compiler(code: str, language: str) -> Dict:
             "success":        status == "success" and exit_code == 0,
             "stdout":         stdout_text,
             "stderr":         stderr_text,
-            "exit_code":      exit_code,
+            "exit_code": exit_code,
             "execution_time": elapsed_ms,
             "timed_out":      False,
             "error":          None,
+            "docker_available": True,
+        }
+    except httpx.TimeoutException:
+        elapsed_ms = round((time.time() - start_time) * 1000, 1)
+        return {
+            "success":        False,
+            "stdout":         "",
+            "stderr":         "Execution timed out (serverless limit).",
+            "exit_code":      -1,
+            "execution_time": elapsed_ms,
+            "timed_out":      True,
+            "error":          "Timed out",
             "docker_available": True,
         }
     except Exception as e:
@@ -223,7 +235,7 @@ def execute_code(code: str, language: str,
     If Docker is not available (e.g. deployed on Render), fall back to Piston serverless execution.
     """
     if not is_available():
-        return _execute_online_compiler(code, language)
+        return _execute_online_compiler(code, language, stdin_input)
 
     if language not in DOCKER_IMAGES:
         return {
