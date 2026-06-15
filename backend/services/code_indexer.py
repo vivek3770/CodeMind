@@ -16,6 +16,7 @@ Flow:
 import os
 import hashlib
 from typing import List, Dict, Optional
+import httpx
 
 # ── Optional imports — graceful degradation ────────────────────
 try:
@@ -39,9 +40,8 @@ COLLECTION    = "code_knowledge"
 MIN_SCORE     = 0.3   # minimum similarity threshold
 TOP_K_DEFAULT = 5
 
-# Code-aware embedding model (falls back to smaller model if unavailable)
-MODEL_NAME = "microsoft/codebert-base"
-FALLBACK_MODEL = "all-MiniLM-L6-v2"  # smaller, faster, less accurate
+# Embedding model (using a unified model for both local and serverless)
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 # ── Singleton state ────────────────────────────────────────────
 _client     = None
@@ -55,10 +55,7 @@ def _get_model():
         try:
             _model = SentenceTransformer(MODEL_NAME)
         except Exception:
-            try:
-                _model = SentenceTransformer(FALLBACK_MODEL)
-            except Exception:
-                _model = None
+            _model = None
     return _model
 
 
@@ -77,21 +74,51 @@ def _get_collection():
 
 
 def is_available() -> bool:
-    """Check if vector search is fully operational."""
-    return CHROMA_AVAILABLE and ST_AVAILABLE
+    """Check if vector search is fully operational (either local or via Hugging Face fallback)."""
+    has_embedder = ST_AVAILABLE or (os.getenv("HF_TOKEN") is not None)
+    return CHROMA_AVAILABLE and has_embedder
 
 
 # ── Embedding ──────────────────────────────────────────────────
 
-def embed(text: str) -> Optional[List[float]]:
-    """Convert text to embedding vector."""
-    model = _get_model()
-    if model is None:
+def _embed_huggingface(text: str) -> Optional[List[float]]:
+    """Get embeddings from the Hugging Face Serverless Inference API."""
+    hf_token = os.getenv("HF_TOKEN")
+    if not hf_token:
         return None
+
+    url = f"https://api-inference.huggingface.co/models/{MODEL_NAME}"
+    headers = {"Authorization": f"Bearer {hf_token}"}
+    payload = {
+        "inputs": text,
+        "options": {"wait_for_model": True}
+    }
+
     try:
-        return model.encode(text, show_progress_bar=False).tolist()
+        response = httpx.post(url, json=payload, headers=headers, timeout=15.0)
+        if response.status_code == 200:
+            res = response.json()
+            if isinstance(res, list):
+                if len(res) > 0 and isinstance(res[0], list):
+                    return res[0]
+                return res
     except Exception:
-        return None
+        pass
+    return None
+
+
+def embed(text: str) -> Optional[List[float]]:
+    """Convert text to embedding vector (local or HF serverless fallback)."""
+    # 1. Try local SentenceTransformer if available
+    model = _get_model()
+    if model is not None:
+        try:
+            return model.encode(text, show_progress_bar=False).tolist()
+        except Exception:
+            pass
+
+    # 2. Fall back to Hugging Face Serverless Inference API
+    return _embed_huggingface(text)
 
 
 # ── Index a file ───────────────────────────────────────────────
@@ -234,10 +261,20 @@ def get_status() -> Dict:
             count = collection.count()
         except Exception:
             pass
+
+    using_hf = not ST_AVAILABLE and (os.getenv("HF_TOKEN") is not None)
+    model_status = MODEL_NAME
+    if ST_AVAILABLE:
+        model_status += " (Local)"
+    elif using_hf:
+        model_status += " (HF Inference API)"
+    else:
+        model_status = "None"
+
     return {
         "chroma_available":  CHROMA_AVAILABLE,
-        "model_available":   ST_AVAILABLE,
-        "model_name":        MODEL_NAME if ST_AVAILABLE else None,
+        "model_available":   ST_AVAILABLE or using_hf,
+        "model_name":        model_status,
         "indexed_chunks":    count,
         "operational":       is_available(),
     }
