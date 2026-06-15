@@ -233,24 +233,11 @@ class RunRequest(BaseModel):
 @router.post("/run")
 async def run_code(request: RunRequest):
     """
-    Execute code in a Docker sandbox.
+    Execute code in a sandbox (Docker locally or Piston in cloud).
     Returns stdout, stderr, exit code, execution time.
     """
     if not request.code.strip():
         raise HTTPException(status_code=400, detail="Code cannot be empty")
-
-    if not exec_available():
-        status = exec_status()
-        return {
-            "success":        False,
-            "stdout":         "",
-            "stderr":         status.get("message", "Docker not available"),
-            "exit_code":      -1,
-            "execution_time": 0,
-            "timed_out":      False,
-            "error":          status.get("message"),
-            "docker_available": False,
-        }
 
     loop   = asyncio.get_event_loop()
     result = await loop.run_in_executor(
