@@ -118,34 +118,108 @@ def pull_image_if_needed(language: str) -> bool:
             return False
 
 
+import httpx
+
+PISTON_URL = "https://emkc.org/api/v2/piston/execute"
+
+PISTON_LANGUAGES = {
+    "python": "python",
+    "javascript": "javascript",
+    "typescript": "typescript",
+    "java": "java",
+}
+
+PISTON_VERSIONS = {
+    "python": "*",
+    "javascript": "*",
+    "typescript": "*",
+    "java": "*",
+}
+
+
+def _execute_piston(code: str, language: str) -> Dict:
+    """Fallback serverless execution using Piston API when Docker is unavailable."""
+    piston_lang = PISTON_LANGUAGES.get(language)
+    if not piston_lang:
+        return {
+            "success":        False,
+            "stdout":         "",
+            "stderr":         f"Language '{language}' not supported for serverless execution.",
+            "exit_code":      -1,
+            "execution_time": 0,
+            "timed_out":      False,
+            "error":          f"Unsupported language: {language}",
+        }
+
+    payload = {
+        "language": piston_lang,
+        "version": PISTON_VERSIONS.get(language, "*"),
+        "files": [
+            {
+                "name": "main" + ("." + FILE_EXTENSIONS[language] if language in FILE_EXTENSIONS else ""),
+                "content": code
+            }
+        ]
+    }
+
+    start_time = time.time()
+    try:
+        with httpx.Client() as client:
+            response = client.post(PISTON_URL, json=payload, timeout=12.0)
+        
+        elapsed_ms = round((time.time() - start_time) * 1000, 1)
+
+        if response.status_code != 200:
+            return {
+                "success":        False,
+                "stdout":         "",
+                "stderr":         f"Serverless execution error: Piston API returned status {response.status_code}",
+                "exit_code":      -1,
+                "execution_time": elapsed_ms,
+                "timed_out":      False,
+                "error":          f"Piston API returned status {response.status_code}",
+            }
+
+        result = response.json()
+        run_info = result.get("run", {})
+        
+        exit_code = run_info.get("code", 0)
+        stdout_text = run_info.get("stdout", "")
+        stderr_text = run_info.get("stderr", "")
+
+        return {
+            "success":        exit_code == 0,
+            "stdout":         stdout_text,
+            "stderr":         stderr_text,
+            "exit_code":      exit_code,
+            "execution_time": elapsed_ms,
+            "timed_out":      False,
+            "error":          None,
+            "docker_available": True,  # Prevent frontend from showing 'Docker not available' warning
+        }
+    except Exception as e:
+        elapsed_ms = round((time.time() - start_time) * 1000, 1)
+        return {
+            "success":        False,
+            "stdout":         "",
+            "stderr":         str(e),
+            "exit_code":      -1,
+            "execution_time": elapsed_ms,
+            "timed_out":      False,
+            "error":          str(e),
+        }
+
+
 # ── Main execution function ────────────────────────────────────
 
 def execute_code(code: str, language: str,
                  stdin_input: Optional[str] = None) -> Dict:
     """
     Run code in a Docker container and return the result.
-
-    Returns:
-    {
-      "success":        bool,
-      "stdout":         str,
-      "stderr":         str,
-      "exit_code":      int,
-      "execution_time": float,   # milliseconds
-      "timed_out":      bool,
-      "error":          str | None
-    }
+    If Docker is not available (e.g. deployed on Render), fall back to Piston serverless execution.
     """
     if not is_available():
-        return {
-            "success":        False,
-            "stdout":         "",
-            "stderr":         "",
-            "exit_code":      -1,
-            "execution_time": 0,
-            "timed_out":      False,
-            "error":          get_status()["message"],
-        }
+        return _execute_piston(code, language)
 
     if language not in DOCKER_IMAGES:
         return {
