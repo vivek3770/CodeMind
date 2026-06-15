@@ -120,7 +120,7 @@ def pull_image_if_needed(language: str) -> bool:
 
 import httpx
 
-PISTON_URL = "https://emkc.org/api/v2/piston/execute"
+PISTON_URL = "https://piston.3rrd.workers.dev/api/v2/execute"
 
 PISTON_LANGUAGES = {
     "python": "python",
