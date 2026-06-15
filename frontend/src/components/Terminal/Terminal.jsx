@@ -12,8 +12,9 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styles from './Terminal.module.css'
+import API_BASE from '../../config/api'
 
-const API = 'http://127.0.0.1:8000/api'
+const API = API_BASE
 
 const LANG_LABELS = {
   python:     'python',

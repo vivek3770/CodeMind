@@ -5,8 +5,9 @@
  */
 import React, { useState, useEffect, useCallback } from 'react'
 import styles from './ReviewHistory.module.css'
+import API_BASE from '../../config/api'
 
-const API = 'http://127.0.0.1:8000/api'
+const API = API_BASE
 
 function scoreColor(s) {
   if (s >= 8) return '#00ff9d'

@@ -4,14 +4,13 @@
  * Green = trained and ready, Yellow = not trained yet.
  */
 import React, { useState, useEffect } from 'react'
-
-const API = 'http://127.0.0.1:8000'
+import { API_ROOT } from '../config/api'
 
 export default function ClassifierBadge() {
   const [info, setInfo] = useState(null)
 
   useEffect(() => {
-    fetch(`${API}/health`)
+    fetch(`${API_ROOT}/health`)
       .then(r => r.json())
       .then(d => setInfo(d.bug_classifier))
       .catch(() => {})
