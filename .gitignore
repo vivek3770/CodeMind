@@ -22,8 +22,21 @@ dist/
 *.swp
 frontend/.env.production
 
-# Local databases and scratch files
-backend/data/**/*.db
-backend/data/**/*.sqlite3
-*.txt
+# Local databases, vector indices and scratch files
+backend/data/*.db
+backend/data/*.json
+backend/data/*.sqlite3
+*.db
+*.sqlite3
 backend/models/
+
+# Ignore text files but keep requirements.txt
+*.txt
+!backend/requirements.txt
+
+# Documentation scratch & temporary files
+CODEMIND_FIXES.md
+*.log
+*.png
+*.webp
+

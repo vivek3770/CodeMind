@@ -132,6 +132,13 @@ export function useEditor() {
       monacoRef.current.editor.setModelLanguage(editorRef.current.getModel(), language)
   }, [activeFile])
 
+  const updateActiveFileContent = useCallback((content) => {
+    setFiles(prev => {
+      if (prev[activeFile]?.content === content) return prev
+      return { ...prev, [activeFile]: { ...prev[activeFile], content } }
+    })
+  }, [activeFile])
+
   const getCurrentCode = useCallback(() =>
     editorRef.current?.getValue() ?? files[activeFile]?.content ?? '', [activeFile, files])
 
@@ -142,5 +149,5 @@ export function useEditor() {
     editorRef.current.focus()
   }, [])
 
-  return { files, activeFile, editorRef, monacoRef, onEditorMount, openFile, addFile, addFileWithContent, closeFile, changeLanguage, getCurrentCode, jumpToLine }
+  return { files, activeFile, editorRef, monacoRef, onEditorMount, openFile, addFile, addFileWithContent, closeFile, changeLanguage, getCurrentCode, jumpToLine, updateActiveFileContent }
 }

@@ -4,7 +4,7 @@ import SemanticSearch from './SemanticSearch'
 import FileUpload from './FileUpload'
 import styles from './FileExplorer.module.css'
 
-export default function FileExplorer({ files, activeFile, onOpenFile, onAddFile, onCloseFile, onFilesUploaded, issueCounts = {}, style, jumpToLine }) {
+export default function FileExplorer({ files, activeFile, getCurrentCode, onOpenFile, onAddFile, onCloseFile, onFilesUploaded, issueCounts = {}, style, jumpToLine }) {
   const [showModal, setShowModal] = useState(false)
   const [newName, setNewName] = useState('')
 
@@ -17,7 +17,7 @@ export default function FileExplorer({ files, activeFile, onOpenFile, onAddFile,
   return (
     <aside className={styles.sidebar} style={style}>
       <div className={styles.header}>Explorer</div>
-      <SemanticSearch onResultClick={result => { onOpenFile(result.filename); setTimeout(() => jumpToLine?.(result.start_line), 100) }} />
+      <SemanticSearch files={files} activeFile={activeFile} getCurrentCode={getCurrentCode} onResultClick={result => { onOpenFile(result.filename); setTimeout(() => jumpToLine?.(result.start_line), 100) }} />
       <FileUpload onFilesUploaded={onFilesUploaded}>
         <div className={styles.tree}>
           <div className={styles.treeRoot}>▾ src/</div>

@@ -11,7 +11,7 @@ import API_BASE from '../config/api'
 const API = API_BASE
 const DEBOUNCE_MS = 400
 
-export default function SemanticSearch({ onResultClick, onIndexFile, files, activeFile }) {
+export default function SemanticSearch({ onResultClick, onIndexFile, files, activeFile, getCurrentCode }) {
   const [query,    setQuery]    = useState('')
   const [results,  setResults]  = useState([])
   const [loading,  setLoading]  = useState(false)
@@ -30,10 +30,71 @@ export default function SemanticSearch({ onResultClick, onIndexFile, files, acti
       .catch(() => setStatus(null))
   }, [])
 
+  const [indexing, setIndexing] = useState(false)
+  const [indexingMsg, setIndexingMsg] = useState('')
+  const indexingPromise = useRef(null)
+  const lastIndexedCode = useRef('')
+
+  // Auto-index all files in the current workspace
+  const autoIndexWorkspace = useCallback(async (force = false, showStatus = false) => {
+    if (!files) return
+    const activeCode = getCurrentCode ? getCurrentCode() : (files[activeFile]?.content ?? '')
+
+    if (!force && lastIndexedCode.current === activeCode && indexingPromise.current) {
+      await indexingPromise.current
+      return
+    }
+    if (indexingPromise.current) {
+      await indexingPromise.current
+    }
+
+    if (showStatus) {
+      setIndexing(true)
+      setIndexingMsg('Indexing workspace code...')
+    }
+
+    indexingPromise.current = (async () => {
+      try {
+        lastIndexedCode.current = activeCode
+        const promises = Object.entries(files).map(([filename, f]) => {
+          const codeToUse = (filename === activeFile) ? activeCode : f.content
+          if (!codeToUse?.trim()) return Promise.resolve()
+          return fetch(`${API}/index`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              filename,
+              code: codeToUse,
+              language: f.language ?? (filename.endsWith('.js') ? 'javascript' : filename.endsWith('.ts') ? 'typescript' : 'python'),
+            }),
+          }).then(r => r.json()).catch(() => {})
+        })
+        await Promise.all(promises)
+        if (showStatus) {
+          setIndexingMsg('✓ Indexing complete!')
+          setTimeout(() => setIndexingMsg(''), 1500)
+        }
+      } finally {
+        indexingPromise.current = null
+        if (showStatus) {
+          setIndexing(false)
+        }
+      }
+    })()
+
+    await indexingPromise.current
+  }, [files, activeFile, getCurrentCode])
+
+  // Auto-index silently on mount / when workspace files load
+  useEffect(() => {
+    autoIndexWorkspace(false, false)
+  }, [autoIndexWorkspace])
+
   // Debounced search
   const doSearch = useCallback(async (q) => {
     if (!q.trim()) { setResults([]); setOpen(false); return }
     setLoading(true)
+    await autoIndexWorkspace(true, false)
     try {
       const res = await fetch(`${API}/search`, {
         method: 'POST',
@@ -49,7 +110,15 @@ export default function SemanticSearch({ onResultClick, onIndexFile, files, acti
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [autoIndexWorkspace])
+
+  const handleFocus = () => {
+    const currentCode = getCurrentCode?.() ?? ''
+    if (lastIndexedCode.current !== currentCode) {
+      autoIndexWorkspace(true, false)
+    }
+    if (results.length > 0) setOpen(true)
+  }
 
   const handleChange = (e) => {
     const val = e.target.value
@@ -87,10 +156,34 @@ export default function SemanticSearch({ onResultClick, onIndexFile, files, acti
     return 'var(--tx3)'
   }
 
+  const handleManualIndexSearch = async () => {
+    await autoIndexWorkspace(true, true)
+    inputRef.current?.focus()
+  }
+
   const isAvailable = status?.operational
 
   return (
     <div className={styles.wrap}>
+      <button
+        className={styles.indexSearchBtn}
+        onClick={handleManualIndexSearch}
+        disabled={indexing || !isAvailable}
+        title="Index current workspace code & open semantic search"
+      >
+        {indexing ? (
+          <>
+            <span className={styles.spinner} />
+            <span>Indexing Code…</span>
+          </>
+        ) : (
+          <>
+            <span>⚡</span>
+            <span>Index & Search</span>
+          </>
+        )}
+      </button>
+
       <div className={styles.inputWrap}>
         <span className={styles.searchIcon}>🔍</span>
         <input
@@ -99,13 +192,19 @@ export default function SemanticSearch({ onResultClick, onIndexFile, files, acti
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => results.length > 0 && setOpen(true)}
+          onFocus={handleFocus}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder={isAvailable ? 'Search code semantically…' : 'Install chromadb to enable search'}
+          placeholder={
+            indexing
+              ? '⚡ Indexing code in background...'
+              : isAvailable
+              ? 'Search code semantically…'
+              : 'Install chromadb to enable search'
+          }
           disabled={!isAvailable}
           spellCheck={false}
         />
-        {loading && <span className={styles.spinner} />}
+        {(loading || indexing) && <span className={styles.spinner} />}
         {query && !loading && (
           <button className={styles.clearBtn}
             onClick={() => { setQuery(''); setResults([]); setOpen(false) }}>
@@ -113,6 +212,11 @@ export default function SemanticSearch({ onResultClick, onIndexFile, files, acti
           </button>
         )}
       </div>
+      {indexingMsg && (
+        <div style={{ fontSize: '11px', color: 'var(--cyan)', padding: '2px 8px' }}>
+          {indexingMsg}
+        </div>
+      )}
 
       {/* Results dropdown */}
       {open && results.length > 0 && (

@@ -37,6 +37,18 @@ def chunk_python(code: str) -> List[Dict]:
     try:
         tree = ast.parse(code)
     except SyntaxError:
+        # Fallback to regex matching for draft/incomplete Python code
+        py_func_re = re.compile(r'^\s*(?:def|class)\s+(\w+)', re.MULTILINE)
+        matches = list(py_func_re.finditer(code))
+        if matches:
+            fallback_chunks = []
+            for i, m in enumerate(matches):
+                func_name = m.group(1)
+                start_line = code[:m.start()].count('\n') + 1
+                end_line = code[:matches[i+1].start()].count('\n') if i + 1 < len(matches) else len(lines)
+                content = "\n".join(lines[start_line - 1:end_line])
+                fallback_chunks.append(_make_chunk(content, func_name, start_line, end_line, "python"))
+            return fallback_chunks
         return [_make_chunk(code, "module", 1, len(lines), "python")]
 
     top_level = [

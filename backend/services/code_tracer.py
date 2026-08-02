@@ -205,6 +205,10 @@ def trace_code(code: str, language: str = "python") -> dict:
         if event != "line":
             return tracer
 
+        # Trace ONLY lines executed inside the user's code, skipping internal library files
+        if frame.f_code.co_filename != "<user_code>":
+            return tracer
+
         if len(steps) >= MAX_STEPS:
             truncated[0] = True
             # Raise to stop execution
@@ -239,6 +243,13 @@ def trace_code(code: str, language: str = "python") -> dict:
     result_holder = [None]
 
     def run():
+        # Mock blocking web server loops so Flask app.run() doesn't hang or capture 500 server steps
+        try:
+            import flask
+            flask.Flask.run = lambda self, *args, **kwargs: None
+        except Exception:
+            pass
+
         sys.settrace(tracer)
         try:
             if RESTRICTED_AVAILABLE:
@@ -284,13 +295,24 @@ def trace_code(code: str, language: str = "python") -> dict:
     }
 
 
+def safe_import_guard(name, globals=None, locals=None, fromlist=(), level=0):
+    """Safe import wrapper blocking dangerous modules like os, subprocess, etc."""
+    BLOCKED_MODULES = {"os", "subprocess", "sys", "shutil", "socket", "ctypes", "signal"}
+    if name in BLOCKED_MODULES:
+        raise ImportError(f"Import of module '{name}' is restricted for security reasons")
+    return __import__(name, globals, locals, fromlist, level)
+
+
 def _run_restricted(code: str, tracer) -> None:
     """Run code using RestrictedPython for maximum safety."""
     byte_code = compile_restricted(code, "<user_code>", "exec")
 
     # Build safe execution environment
     restricted_globals = dict(safe_globals)
+    restricted_globals["__name__"] = "__main__"
     restricted_globals["__builtins__"] = dict(safe_builtins)
+    restricted_globals["__builtins__"]["__import__"] = safe_import_guard
+    restricted_globals["__import__"] = safe_import_guard
     restricted_globals["_getiter_"]    = guarded_getiter
     restricted_globals["_getattr_"]    = guarded_getattr
     restricted_globals["_write_"]      = lambda x: x
@@ -301,11 +323,12 @@ def _run_restricted(code: str, tracer) -> None:
                  "map", "filter", "sorted", "reversed", "sum",
                  "min", "max", "abs", "round", "int", "float",
                  "str", "bool", "list", "dict", "set", "tuple",
-                 "isinstance", "type", "repr", "all", "any"]:
+                 "isinstance", "type", "repr", "all", "any", "__import__"]:
         import builtins
         if hasattr(builtins, name):
             restricted_globals["__builtins__"][name] = getattr(builtins, name)
 
+    restricted_globals["__builtins__"]["__import__"] = safe_import_guard
     exec(byte_code, restricted_globals)
 
 
@@ -325,10 +348,11 @@ def _run_basic(code: str, tracer) -> None:
         for name in safe_builtin_names
         if hasattr(builtins, name)
     }
+    safe_builtins_dict["__import__"] = safe_import_guard
 
     exec(
         compile(code, "<user_code>", "exec"),
-        {"__builtins__": safe_builtins_dict}
+        {"__builtins__": safe_builtins_dict, "__import__": safe_import_guard, "__name__": "__main__"}
     )
 
 

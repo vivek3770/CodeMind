@@ -22,7 +22,7 @@ const API = `${cleanUrl}/api`
 const PANEL = { AI:'ai', ALGO:'algo', CODE_VIZ:'codeviz', HISTORY:'history', NONE:'none' }
 
 export default function App() {
-  const { files, activeFile, editorRef, monacoRef, onEditorMount, openFile, addFile, addFileWithContent, closeFile, changeLanguage, getCurrentCode, jumpToLine } = useEditor()
+  const { files, activeFile, editorRef, monacoRef, onEditorMount, openFile, addFile, addFileWithContent, closeFile, changeLanguage, getCurrentCode, jumpToLine, updateActiveFileContent } = useEditor()
   const { loading, loadingAction, reviewResult, outputResult, error, reviewCode, explainCode, fixCode, generateTests, clearReview } = useAI()
   const codeViz = useCodeVisualizer(editorRef, monacoRef)
 
@@ -77,13 +77,17 @@ export default function App() {
   }
 
   const handleFilesUploaded = useCallback(uploads => {
-    uploads.forEach(({filename,content}) => addFileWithContent(filename,content))
+    uploads.forEach(({filename,content}) => {
+      addFileWithContent(filename,content)
+      fetch(`${API}/index`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename,code:content,language:filename.endsWith('.js')?'javascript':filename.endsWith('.ts')?'typescript':'python'})}).catch(()=>{})
+    })
     showToast(uploads.length===1 ? `✓ Uploaded ${uploads[0].filename}` : `✓ Uploaded ${uploads.length} files`)
   }, [addFileWithContent, showToast])
 
   const handleReview = async () => {
     setActivePanel(PANEL.AI)
     const code=getCurrentCode(), lang=files[activeFile]?.language??'python'
+    fetch(`${API}/index`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:activeFile,code,language:lang})}).catch(()=>{})
     fetch(`${API}/rag/similar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,language:lang})}).then(r=>r.json()).then(d=>{if(d.found)setRagSummary(d.summary)}).catch(()=>{})
     fetch(`${API}/complexity`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,language:lang})}).then(r=>r.json()).then(d=>setComplexityData(d)).catch(()=>{})
     reviewCode(code,lang,activeFile)
@@ -111,11 +115,11 @@ export default function App() {
     <div className={styles.app}>
       <TopBar language={files[activeFile]?.language??'python'} onLanguageChange={changeLanguage} onReview={handleReview} onExplain={handleExplain} onFix={handleFix} onTests={handleTests} onVisualize={handleVisualize} onTogglePanel={()=>togglePanel(PANEL.AI)} onToggleAlgoVisualizer={()=>togglePanel(PANEL.ALGO)} onToggleTerminal={()=>setTerminalVisible(v=>!v)} loading={loading} loadingAction={loadingAction} codeVizLoading={codeViz.loading} activePanel={activePanel} terminalVisible={terminalVisible} />
       <div className={styles.main}>
-        <FileExplorer files={files} activeFile={activeFile} onOpenFile={openFile} onAddFile={addFile} onCloseFile={handleCloseFile} onFilesUploaded={handleFilesUploaded} issueCounts={issueCounts} jumpToLine={jumpToLine} style={{width:sidebarW,minWidth:sidebarW,maxWidth:sidebarW}} />
+        <FileExplorer files={files} activeFile={activeFile} getCurrentCode={getCurrentCode} onOpenFile={openFile} onAddFile={addFile} onCloseFile={handleCloseFile} onFilesUploaded={handleFilesUploaded} issueCounts={issueCounts} jumpToLine={jumpToLine} style={{width:sidebarW,minWidth:sidebarW,maxWidth:sidebarW}} />
         <div className={`${styles.resizeHandle} ${isDragging==='sidebar'?styles.dragging:''}`} onMouseDown={onMouseDownSidebar} />
         <div className={styles.editorCol}>
           <TabBar files={files} activeFile={activeFile} onOpenFile={openFile} onCloseFile={handleCloseFile} />
-          <Editor files={files} activeFile={activeFile} onMount={onEditorMount} onCursorChange={setCursor} onContentChange={({lineCount:lc,value})=>{setLineCount(lc);setCharCount(value.length)}} />
+          <Editor files={files} activeFile={activeFile} onMount={onEditorMount} onCursorChange={setCursor} onContentChange={({lineCount:lc,value})=>{setLineCount(lc);setCharCount(value.length);updateActiveFileContent(value)}} />
           <Terminal code={getCurrentCode()} language={files[activeFile]?.language??'python'} visible={terminalVisible} height={terminalHeight} onHeightChange={setTerminalHeight} />
         </div>
         {rightPanelVisible && <div className={`${styles.resizeHandle} ${isDragging==='right'?styles.dragging:''}`} onMouseDown={onMouseDownRight} />}
