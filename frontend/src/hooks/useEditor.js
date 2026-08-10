@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { getLanguageFromFilename, getDefaultContent } from '../utils/fileUtils'
-import { loadFilesFromStorage, useDebouncedSave } from './useStorage'
 
 const DEMO_FILES = {
   'app.py': { language: 'python', content: `#!/usr/bin/env python3
@@ -79,31 +78,21 @@ function updateUI(data) {
 }
 
 export function useEditor() {
-  const [files, setFiles] = useState(() => {
-    const saved = loadFilesFromStorage()
-    return saved ? saved.files : DEMO_FILES
-  })
-  const [activeFile, setActiveFile] = useState(() => {
-    const saved = loadFilesFromStorage()
-    return saved ? saved.activeFile : 'app.py'
-  })
-  const editorRef    = useRef(null)
-  const monacoRef    = useRef(null)
-  const scheduleSave = useDebouncedSave()
+  const [files, setFiles] = useState(DEMO_FILES)
+  const [activeFile, setActiveFile] = useState('app.py')
+  const activeFileRef = useRef(activeFile)
+  useEffect(() => { activeFileRef.current = activeFile }, [activeFile])
 
-  useEffect(() => { scheduleSave(files, activeFile) }, [files, activeFile, scheduleSave])
+  const editorRef = useRef(null)
+  const monacoRef = useRef(null)
 
   const onEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor; monacoRef.current = monaco
   }, [])
 
   const openFile = useCallback((filename) => {
-    if (editorRef.current && activeFile) {
-      const content = editorRef.current.getValue()
-      setFiles(prev => ({ ...prev, [activeFile]: { ...prev[activeFile], content } }))
-    }
     setActiveFile(filename)
-  }, [activeFile])
+  }, [])
 
   const addFile = useCallback((filename) => {
     const language = getLanguageFromFilename(filename)
@@ -127,20 +116,26 @@ export function useEditor() {
   }, [files])
 
   const changeLanguage = useCallback((language) => {
-    setFiles(prev => ({ ...prev, [activeFile]: { ...prev[activeFile], language } }))
+    const current = activeFileRef.current
+    if (!current) return
+    setFiles(prev => ({ ...prev, [current]: { ...prev[current], language } }))
     if (editorRef.current && monacoRef.current)
       monacoRef.current.editor.setModelLanguage(editorRef.current.getModel(), language)
-  }, [activeFile])
+  }, [])
 
-  const updateActiveFileContent = useCallback((content) => {
+  const updateActiveFileContent = useCallback((content, filename) => {
+    const targetFile = filename || activeFileRef.current
+    if (!targetFile) return
     setFiles(prev => {
-      if (prev[activeFile]?.content === content) return prev
-      return { ...prev, [activeFile]: { ...prev[activeFile], content } }
+      if (prev[targetFile]?.content === content) return prev
+      return { ...prev, [targetFile]: { ...prev[targetFile], content } }
     })
-  }, [activeFile])
+  }, [])
 
-  const getCurrentCode = useCallback(() =>
-    editorRef.current?.getValue() ?? files[activeFile]?.content ?? '', [activeFile, files])
+  const getCurrentCode = useCallback(() => {
+    const current = activeFileRef.current
+    return editorRef.current?.getValue() ?? files[current]?.content ?? ''
+  }, [files])
 
   const jumpToLine = useCallback((line) => {
     if (!editorRef.current) return

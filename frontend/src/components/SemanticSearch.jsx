@@ -56,20 +56,30 @@ export default function SemanticSearch({ onResultClick, onIndexFile, files, acti
     indexingPromise.current = (async () => {
       try {
         lastIndexedCode.current = activeCode
-        const promises = Object.entries(files).map(([filename, f]) => {
-          const codeToUse = (filename === activeFile) ? activeCode : f.content
-          if (!codeToUse?.trim()) return Promise.resolve()
-          return fetch(`${API}/index`, {
+
+        // 1. Index active file first
+        const activeLang = files[activeFile]?.language ?? (activeFile?.endsWith('.js') ? 'javascript' : activeFile?.endsWith('.ts') ? 'typescript' : 'python')
+        if (activeCode.trim() && activeFile) {
+          await fetch(`${API}/index`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filename,
-              code: codeToUse,
-              language: f.language ?? (filename.endsWith('.js') ? 'javascript' : filename.endsWith('.ts') ? 'typescript' : 'python'),
-            }),
+            body: JSON.stringify({ filename: activeFile, code: activeCode, language: activeLang }),
           }).then(r => r.json()).catch(() => {})
-        })
-        await Promise.all(promises)
+        }
+
+        // 2. Index other workspace files sequentially
+        for (const [filename, f] of Object.entries(files)) {
+          if (filename === activeFile) continue
+          const code = f.content
+          if (!code?.trim()) continue
+          const lang = f.language ?? (filename.endsWith('.js') ? 'javascript' : filename.endsWith('.ts') ? 'typescript' : 'python')
+          await fetch(`${API}/index`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, code, language: lang }),
+          }).then(r => r.json()).catch(() => {})
+        }
+
         if (showStatus) {
           setIndexingMsg('✓ Indexing complete!')
           setTimeout(() => setIndexingMsg(''), 1500)

@@ -77,18 +77,17 @@ export default function Editor({
   onCursorChange,
   onContentChange,
 }) {
-  const monacoRef  = useRef(null)
-  const editorRef  = useRef(null)
-  const prevFile   = useRef(null)
+  const monacoRef   = useRef(null)
+  const editorRef   = useRef(null)
+  const listenerRef = useRef(null)
 
   function handleBeforeMount(monaco) {
     monaco.editor.defineTheme('codemind', THEME_DEF)
   }
 
   function handleMount(editor, monaco) {
-    editorRef.current  = editor
-    monacoRef.current  = monaco
-    prevFile.current   = activeFile
+    editorRef.current = editor
+    monacoRef.current = monaco
     onMount?.(editor, monaco)
 
     editor.onDidChangeCursorPosition((e) => {
@@ -97,39 +96,48 @@ export default function Editor({
         col:  e.position.column,
       })
     })
-
-    editor.onDidChangeModelContent(() => {
-      onContentChange?.({
-        value:     editor.getValue(),
-        lineCount: editor.getModel()?.getLineCount() ?? 0,
-      })
-    })
   }
 
-  // Swap the editor model when activeFile changes
+  // Synchronize unique Monaco model for each active file
   useEffect(() => {
     const editor = editorRef.current
     const monaco = monacoRef.current
-    if (!editor || !monaco || !activeFile || prevFile.current === activeFile) return
+    if (!editor || !monaco || !activeFile) return
 
     const file = files[activeFile]
     if (!file) return
 
-    // Dispose old model to avoid memory leaks
-    const oldModel = editor.getModel()
+    const uri = monaco.Uri.parse(`inmemory://model/${activeFile}`)
+    let model = monaco.editor.getModel(uri)
 
-    const newModel = monaco.editor.createModel(file.content, file.language)
-    editor.setModel(newModel)
+    if (!model) {
+      model = monaco.editor.createModel(file.content, file.language, uri)
+    } else {
+      if (model.getValue() !== file.content) {
+        model.setValue(file.content)
+      }
+      if (model.getLanguageId() !== file.language) {
+        monaco.editor.setModelLanguage(model, file.language)
+      }
+    }
 
-    newModel.onDidChangeContent(() => {
+    if (editor.getModel() !== model) {
+      editor.setModel(model)
+    }
+
+    // Attach content change listener tied explicitly to this file
+    listenerRef.current?.dispose()
+    listenerRef.current = model.onDidChangeContent(() => {
       onContentChange?.({
-        value:     editor.getValue(),
-        lineCount: newModel.getLineCount(),
+        filename:  activeFile,
+        value:     model.getValue(),
+        lineCount: model.getLineCount(),
       })
     })
 
-    oldModel?.dispose()
-    prevFile.current = activeFile
+    return () => {
+      listenerRef.current?.dispose()
+    }
   }, [activeFile, files, onContentChange])
 
   const file = files[activeFile]
@@ -139,8 +147,6 @@ export default function Editor({
     <div className={styles.editorWrap}>
       <MonacoEditor
         height="100%"
-        language={file.language}
-        value={file.content}
         theme="codemind"
         beforeMount={handleBeforeMount}
         onMount={handleMount}

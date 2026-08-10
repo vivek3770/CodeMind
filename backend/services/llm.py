@@ -15,11 +15,14 @@ from google import genai
 
 # ── Client ─────────────────────────────────────────────────────
 _client = None
+_last_key = None
 
 def _get_client():
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    global _client, _last_key
+    current_key = os.getenv("GEMINI_API_KEY")
+    if _client is None or _last_key != current_key:
+        _client = genai.Client(api_key=current_key)
+        _last_key = current_key
     return _client
 
 MODEL = "gemini-2.5-flash"

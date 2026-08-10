@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import os
 
 _dir = os.path.dirname(__file__)
-load_dotenv(os.path.join(_dir, ".env"))
+load_dotenv(os.path.join(_dir, ".env"), override=True)
 
 try:
     from backend.routers.ai import router as ai_router

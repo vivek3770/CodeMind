@@ -119,7 +119,7 @@ export default function App() {
         <div className={`${styles.resizeHandle} ${isDragging==='sidebar'?styles.dragging:''}`} onMouseDown={onMouseDownSidebar} />
         <div className={styles.editorCol}>
           <TabBar files={files} activeFile={activeFile} onOpenFile={openFile} onCloseFile={handleCloseFile} />
-          <Editor files={files} activeFile={activeFile} onMount={onEditorMount} onCursorChange={setCursor} onContentChange={({lineCount:lc,value})=>{setLineCount(lc);setCharCount(value.length);updateActiveFileContent(value)}} />
+          <Editor files={files} activeFile={activeFile} onMount={onEditorMount} onCursorChange={setCursor} onContentChange={({lineCount:lc,value,filename})=>{setLineCount(lc);setCharCount(value.length);updateActiveFileContent(value,filename)}} />
           <Terminal code={getCurrentCode()} language={files[activeFile]?.language??'python'} visible={terminalVisible} height={terminalHeight} onHeightChange={setTerminalHeight} />
         </div>
         {rightPanelVisible && <div className={`${styles.resizeHandle} ${isDragging==='right'?styles.dragging:''}`} onMouseDown={onMouseDownRight} />}

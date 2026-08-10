@@ -47,6 +47,8 @@ def is_available() -> bool:
 
 
 # ── Database Helpers ───────────────────────────────────────────
+import threading
+_db_lock = threading.Lock()
 
 def _load_db() -> Dict[str, dict]:
     """Load the JSON vector database from disk."""
@@ -149,44 +151,45 @@ def index_file(filename: str, code: str, language: str) -> Dict:
     if not chunks:
         return {"success": True, "chunks_indexed": 0, "message": "No chunks found"}
 
-    db = _load_db()
+    with _db_lock:
+        db = _load_db()
 
-    # Delete existing chunks for this file
-    keys_to_delete = [
-        key for key, val in db.items()
-        if val.get("metadata", {}).get("filename") == filename
-    ]
-    for key in keys_to_delete:
-        del db[key]
+        # Delete existing chunks for this file
+        keys_to_delete = [
+            key for key, val in db.items()
+            if val.get("metadata", {}).get("filename") == filename
+        ]
+        for key in keys_to_delete:
+            del db[key]
 
-    # Index each chunk
-    indexed = 0
-    for chunk in chunks:
-        if not chunk["content"].strip():
-            continue
+        # Index each chunk
+        indexed = 0
+        for chunk in chunks:
+            if not chunk["content"].strip():
+                continue
 
-        embedding = embed(chunk["content"])
-        if embedding is None:
-            continue
+            embedding = embed(chunk["content"])
+            if embedding is None:
+                continue
 
-        chunk_id = hashlib.md5(
-            f"{filename}:{chunk['start_line']}:{chunk['content'][:50]}".encode()
-        ).hexdigest()
+            chunk_id = hashlib.md5(
+                f"{filename}:{chunk['start_line']}:{chunk['content'][:50]}".encode()
+            ).hexdigest()
 
-        db[chunk_id] = {
-            "embedding": embedding,
-            "document": chunk["content"],
-            "metadata": {
-                "filename": filename,
-                "function_name": chunk["function_name"],
-                "language": language,
-                "start_line": chunk["start_line"],
-                "end_line": chunk["end_line"],
+            db[chunk_id] = {
+                "embedding": embedding,
+                "document": chunk["content"],
+                "metadata": {
+                    "filename": filename,
+                    "function_name": chunk["function_name"],
+                    "language": language,
+                    "start_line": chunk["start_line"],
+                    "end_line": chunk["end_line"],
+                }
             }
-        }
-        indexed += 1
+            indexed += 1
 
-    _save_db(db)
+        _save_db(db)
 
     return {
         "success": True,
