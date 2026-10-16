@@ -35,11 +35,19 @@ export default function App() {
   const [ragSummary,      setRagSummary]      = useState(null)
   const [toast,           setToast]           = useState(null)
   const [cursor,          setCursor]          = useState({ line:1, col:1 })
-  const [lineCount,       setLineCount]       = useState(0)
-  const [charCount,       setCharCount]       = useState(0)
+  const [lineCount,       setLineCount]       = useState(() => files[activeFile]?.content ? files[activeFile].content.split('\n').length : 0)
+  const [charCount,       setCharCount]       = useState(() => files[activeFile]?.content ? files[activeFile].content.length : 0)
   const toastTimer = useRef(null)
   const dragging = useRef(null), dragStart = useRef(null), sizeStart = useRef(null)
   const [isDragging, setIsDragging] = useState(null)
+
+  useEffect(() => {
+    const content = files[activeFile]?.content
+    if (typeof content === 'string') {
+      setLineCount(content ? content.split('\n').length : 0)
+      setCharCount(content.length)
+    }
+  }, [activeFile, files])
 
   const onMouseDownSidebar = useCallback(e => { e.preventDefault(); dragging.current='sidebar'; dragStart.current=e.clientX; sizeStart.current=sidebarW; setIsDragging('sidebar') }, [sidebarW])
   const onMouseDownRight   = useCallback(e => { e.preventDefault(); dragging.current='right';   dragStart.current=e.clientX; sizeStart.current=rightW;   setIsDragging('right')   }, [rightW])

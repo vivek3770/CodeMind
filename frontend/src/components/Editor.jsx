@@ -85,23 +85,7 @@ export default function Editor({
     monaco.editor.defineTheme('codemind', THEME_DEF)
   }
 
-  function handleMount(editor, monaco) {
-    editorRef.current = editor
-    monacoRef.current = monaco
-    onMount?.(editor, monaco)
-
-    editor.onDidChangeCursorPosition((e) => {
-      onCursorChange?.({
-        line: e.position.lineNumber,
-        col:  e.position.column,
-      })
-    })
-  }
-
-  // Synchronize unique Monaco model for each active file
-  useEffect(() => {
-    const editor = editorRef.current
-    const monaco = monacoRef.current
+  const syncActiveModel = React.useCallback((editor, monaco) => {
     if (!editor || !monaco || !activeFile) return
 
     const file = files[activeFile]
@@ -134,11 +118,35 @@ export default function Editor({
         lineCount: model.getLineCount(),
       })
     })
+  }, [activeFile, files, onContentChange])
+
+  function handleMount(editor, monaco) {
+    editorRef.current = editor
+    monacoRef.current = monaco
+    onMount?.(editor, monaco)
+
+    editor.onDidChangeCursorPosition((e) => {
+      onCursorChange?.({
+        line: e.position.lineNumber,
+        col:  e.position.column,
+      })
+    })
+
+    syncActiveModel(editor, monaco)
+  }
+
+  // Synchronize unique Monaco model for each active file
+  useEffect(() => {
+    const editor = editorRef.current
+    const monaco = monacoRef.current
+    if (!editor || !monaco) return
+
+    syncActiveModel(editor, monaco)
 
     return () => {
       listenerRef.current?.dispose()
     }
-  }, [activeFile, files, onContentChange])
+  }, [syncActiveModel])
 
   const file = files[activeFile]
   if (!file) return <div className={styles.empty}>No file open</div>
